@@ -1,0 +1,2064 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Тетрадка">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#EDF0F5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#11141B" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<title>Тетрадка</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+*{box-sizing:border-box}
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<style>
+/* Layout: one narrow column, like a pocket notebook; index cards for review; one ink per course */
+:root {
+  --bg: #EDF0F5;
+  --surface: #FFFFFF;
+  --sunk: #E2E6EE;
+  --ink: #1A1F2C;
+  --muted: #5C6478;
+  --line: #D5DAE4;
+  --ml: #17786A;  --ml-soft: #D7EEE9;
+  --dl: #3A55B8;  --dl-soft: #DDE3F7;
+  --es: #B42F58;  --es-soft: #F6DCE4;
+  --again: #B93A32;
+  --hard: #A86A10;
+  --good: #23784A;
+  --on-grade: #FFFFFF;
+  --display: "Unbounded", "Arial Black", system-ui, sans-serif;
+  --body: "Onest", -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11141B; --surface: #1A1E28; --sunk: #232836; --ink: #E7EAF1; --muted: #98A0B4; --line: #2C3242;
+    --ml: #4CC2AE; --ml-soft: #173A36; --dl: #8EA6F7; --dl-soft: #222C4D; --es: #F27D9E; --es-soft: #45202D;
+    --again: #F07167; --hard: #E7AE4C; --good: #5CCB8A; --on-grade: #11141B; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11141B; --surface: #1A1E28; --sunk: #232836; --ink: #E7EAF1; --muted: #98A0B4; --line: #2C3242;
+  --ml: #4CC2AE; --ml-soft: #173A36; --dl: #8EA6F7; --dl-soft: #222C4D; --es: #F27D9E; --es-soft: #45202D;
+  --again: #F07167; --hard: #E7AE4C; --good: #5CCB8A; --on-grade: #11141B; color-scheme: dark;
+}
+html, body { min-height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5; -webkit-tap-highlight-color: transparent; }
+.c-ml { --accent: var(--ml); --accent-soft: var(--ml-soft); }
+.c-dl { --accent: var(--dl); --accent-soft: var(--dl-soft); }
+.c-es { --accent: var(--es); --accent-soft: var(--es-soft); }
+.wrap {
+  max-width: 520px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+p { margin: 0; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, [tabindex]:focus-visible, summary:focus-visible { outline: 2px solid var(--accent, var(--ink)); outline-offset: 2px; }
+.label { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+.top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.brand { font-family: var(--display); font-weight: 700; font-size: 28px; letter-spacing: -.01em; line-height: 1.1; }
+.date { color: var(--muted); font-size: 14px; }
+.streak { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-family: var(--mono); font-size: 13px; white-space: nowrap; }
+.streak svg { width: 16px; height: 16px; fill: var(--hard); }
+
+.today { background: var(--ink); color: var(--bg); border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.today-row { display: flex; align-items: baseline; gap: 12px; }
+.today-num { font-family: var(--display); font-weight: 700; font-size: 52px; line-height: 1; }
+.today-text { font-size: 15px; opacity: .8; }
+.today-split { display: flex; gap: 16px; font-family: var(--mono); font-size: 12px; opacity: .75; flex-wrap: wrap; }
+.btn { border: 0; border-radius: 12px; padding: 13px 18px; font-weight: 600; font-size: 16px; background: var(--accent, var(--ink)); color: #fff; }
+.today .btn { background: var(--bg); color: var(--ink); }
+.btn.ghost { background: transparent; border: 1.5px solid var(--line); color: var(--ink); }
+.btn:disabled { opacity: .4; cursor: default; }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn-row .btn { flex: 1 1 140px; }
+
+.tabs { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--sunk); border-radius: 12px; padding: 4px; gap: 4px; }
+.tab { border: 0; background: transparent; border-radius: 9px; padding: 10px 4px; font-weight: 600; font-size: 14px; color: var(--muted); white-space: nowrap; }
+.tab[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.tab .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: 1px; }
+
+.course-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.course-name { font-family: var(--display); font-weight: 500; font-size: 18px; }
+.toggle { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 12px; font-family: var(--mono); font-size: 12px; }
+
+.module { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+.module summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; padding: 14px 16px; }
+.module summary::-webkit-details-marker { display: none; }
+.mod-kicker { grid-column: 1 / -1; }
+.mod-title { font-weight: 600; font-size: 16px; line-height: 1.3; min-width: 0; }
+.mod-meta { display: flex; align-items: center; gap: 8px; }
+.chev { width: 18px; height: 18px; stroke: var(--muted); fill: none; stroke-width: 2; transition: transform .15s; }
+.module[open] .chev { transform: rotate(180deg); }
+.mod-bar { grid-column: 1 / -1; }
+.row { display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; align-items: center; padding: 13px 16px; border: 0; background: transparent; text-align: left; border-top: 1px solid var(--line); width: 100%; }
+.row:active { background: var(--sunk); }
+.row-n { font-family: var(--mono); font-size: 12px; color: var(--accent); }
+.row-main { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.row-title { font-weight: 500; font-size: 15px; line-height: 1.3; }
+.row-sub { font-size: 12.5px; color: var(--muted); }
+.row.exam { background: var(--accent-soft); }
+.row.exam .row-title { font-weight: 600; }
+.bar { height: 4px; border-radius: 4px; background: var(--sunk); overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+.badge { font-family: var(--mono); font-size: 12px; padding: 3px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+.badge.quiet { background: transparent; color: var(--muted); }
+.stack { display: flex; flex-direction: column; gap: 10px; }
+
+.foot { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; color: var(--muted); font-size: 13px; }
+.linkbtn { border: 0; background: none; padding: 0; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; font-size: 13px; }
+.linkbtn.danger { color: var(--again); }
+
+.nav { display: flex; align-items: center; gap: 10px; }
+.back { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); display: grid; place-items: center; flex: none; }
+.back svg { width: 20px; height: 20px; stroke: var(--ink); fill: none; stroke-width: 2; }
+.nav-title { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.h-display { font-family: var(--display); font-weight: 700; font-size: 25px; line-height: 1.2; }
+
+.lesson { display: flex; flex-direction: column; gap: 14px; font-size: 17px; line-height: 1.6; min-width: 0; }
+.lesson p { max-width: 65ch; }
+.lesson b { color: var(--accent); font-weight: 600; }
+.lesson code { font-family: var(--mono); font-size: .86em; background: var(--sunk); padding: 1px 5px; border-radius: 6px; overflow-wrap: anywhere; }
+.lesson pre code { background: none; padding: 0; border-radius: 0; font-size: inherit; color: inherit; overflow-wrap: normal; white-space: pre; }
+.lesson pre { margin: 0; background: var(--ink); color: var(--bg); border-radius: 12px; padding: 14px 16px; overflow-x: auto; font-family: var(--mono); font-size: 13px; line-height: 1.55; }
+
+.progress { display: flex; align-items: center; gap: 10px; }
+.progress .bar { flex: 1; height: 6px; }
+.card {
+  position: relative; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 20px;
+  min-height: 320px; padding: 24px 22px; display: flex; flex-direction: column; gap: 16px;
+  box-shadow: 0 10px 30px -18px rgba(20,30,50,.35);
+  background-image: repeating-linear-gradient(to bottom, transparent 0 31px, var(--sunk) 31px 32px);
+  background-position: 0 72px; cursor: pointer;
+}
+.card-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.boxes { display: flex; gap: 4px; flex: none; }
+.boxes i { width: 8px; height: 8px; border-radius: 2px; background: var(--sunk); border: 1px solid var(--line); }
+.boxes i.on { background: var(--accent); border-color: var(--accent); }
+.front { font-size: 22px; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
+.front.word { font-family: var(--display); font-weight: 500; font-size: 34px; line-height: 1.15; }
+.answer { border-top: 1.5px dashed var(--line); padding-top: 16px; display: flex; flex-direction: column; gap: 10px; font-size: 18px; }
+.answer .main { font-size: 20px; font-weight: 600; overflow-wrap: anywhere; }
+.example { color: var(--muted); font-size: 15px; }
+.example em { color: var(--ink); font-style: normal; }
+.hint { margin-top: auto; text-align: center; color: var(--muted); font-size: 14px; }
+.speak { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 12px; font-size: 13px; }
+.speak svg { width: 16px; height: 16px; fill: var(--accent); }
+
+.grades { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.grade { border: 0; border-radius: 14px; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; font-weight: 600; color: var(--on-grade); }
+.grade small { font-family: var(--mono); font-size: 11px; font-weight: 400; opacity: .85; }
+.g0 { background: var(--again); } .g1 { background: var(--hard); } .g2 { background: var(--good); }
+
+.options { display: flex; flex-direction: column; gap: 10px; }
+.opt { text-align: left; border: 1.5px solid var(--line); background: var(--surface); border-radius: 14px; padding: 14px 16px; font-size: 16px; display: flex; gap: 12px; align-items: flex-start; }
+.opt .k { font-family: var(--mono); color: var(--muted); }
+.opt.right { border-color: var(--good); background: color-mix(in srgb, var(--good) 12%, var(--surface)); }
+.opt.wrong { border-color: var(--again); background: color-mix(in srgb, var(--again) 12%, var(--surface)); }
+.why { background: var(--sunk); border-radius: 14px; padding: 14px 16px; font-size: 15px; }
+.from { font-size: 13px; color: var(--muted); }
+
+.empty { text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center; padding: 32px 8px; }
+.big-score { font-family: var(--display); font-weight: 700; font-size: 64px; line-height: 1; color: var(--accent); }
+
+.words { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; }
+.word-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; padding: 11px 16px; border-top: 1px solid var(--line); align-items: center; font-size: 15px; }
+.word-row:first-child { border-top: 0; }
+.word-row b { font-weight: 600; min-width: 0; }
+.word-row span { color: var(--muted); min-width: 0; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .answer, .why { animation: rise .2s ease-out; }
+  @keyframes rise { from { opacity: .4; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+}
+</style>
+
+<div id="app"></div>
+
+<script>
+/* Конструктор темы: T(id, title, lesson[], cards[[вопрос, ответ]], quiz[[вопрос, [варианты], индекс_верного, пояснение]]) */
+const T = (id, title, lesson, cards, quiz) => ({
+  id, title, lesson, cards,
+  quiz: quiz.map(x => Array.isArray(x) ? { q: x[0], o: x[1], a: x[2], why: x[3] } : x)
+});
+/* Блок кода внутри урока */
+const C = code => ({ code });
+
+const ML = [
+{ id:"basics", title:"Что такое ML",
+  lesson:[
+   "Машинное обучение — это когда правила не пишут вручную, а модель <b>находит закономерности в данных</b>. Вместо «если в письме есть X, это спам» мы показываем тысячи примеров, и модель сама подбирает правило.",
+   "Три основных режима. <b>С учителем</b> (supervised): у каждого примера есть правильный ответ, метка. <b>Без учителя</b> (unsupervised): меток нет, модель ищет структуру, например группы похожих объектов. <b>С подкреплением</b> (RL): агент действует в среде и получает награду.",
+   "Задачи с учителем бывают двух видов: <b>регрессия</b> предсказывает число (цену квартиры), <b>классификация</b> предсказывает класс (спам или не спам).",
+   "<b>Признаки</b> (features) — входные данные, <b>целевая переменная</b> (target) — то, что предсказываем. Модель — это функция с параметрами, а обучение — подбор этих параметров."
+  ],
+  cards:[
+   ["Чем ML отличается от обычного программирования?","Правила не пишутся вручную: модель находит их сама по примерам."],
+   ["Что такое обучение с учителем?","Обучение на примерах, у каждого из которых есть правильный ответ (метка)."],
+   ["Регрессия или классификация: в чём разница?","Регрессия предсказывает число, классификация — категорию."],
+   ["Что такое признаки (features)?","Входные характеристики объекта, по которым модель делает предсказание."],
+   ["Пример задачи без учителя?","Кластеризация клиентов по поведению, когда группы заранее никто не размечал."],
+   ["Что значит «обучить модель»?","Подобрать её параметры так, чтобы ошибка на данных была минимальной."]
+  ],
+  quiz:[
+   {q:"Предсказать температуру на завтра — это…", o:["Классификация","Регрессия","Кластеризация"], a:1, why:"Ответ — число на непрерывной шкале, значит это регрессия."},
+   {q:"Агент играет в игру и получает очки за победы. Какой это режим?", o:["С учителем","Без учителя","С подкреплением"], a:2, why:"Обучение через награды от среды — это reinforcement learning."},
+   {q:"Разбить покупателей на группы без готовых меток — это…", o:["Кластеризация","Регрессия","Классификация"], a:0, why:"Меток нет, ищем структуру: обучение без учителя, кластеризация."}
+  ]},
+{ id:"linreg", title:"Линейная регрессия",
+  lesson:[
+   "Самая простая модель: <code>ŷ = w·x + b</code>. Здесь <b>w</b> — вес (наклон прямой), <b>b</b> — смещение. Для нескольких признаков: <code>ŷ = w₁x₁ + w₂x₂ + … + b</code>.",
+   "Чтобы понять, насколько модель ошибается, нужна <b>функция потерь</b>. Для регрессии стандарт — <b>MSE</b>, средний квадрат ошибки: среднее от <code>(y − ŷ)²</code>. Квадрат сильнее наказывает большие промахи.",
+   "Обучение — это поиск таких w и b, при которых MSE минимальна. У линейной регрессии есть точное решение (нормальное уравнение), но на практике чаще используют градиентный спуск.",
+   "<b>MAE</b> — среднее модулей ошибок. Она спокойнее относится к выбросам, чем MSE."
+  ],
+  cards:[
+   ["Формула линейной регрессии с одним признаком?","ŷ = w·x + b"],
+   ["Что такое функция потерь?","Число, которое показывает, насколько предсказания модели далеки от правильных ответов."],
+   ["Как считается MSE?","Среднее значение квадратов разностей (y − ŷ)² по всем примерам."],
+   ["Почему MSE чувствительна к выбросам?","Ошибки возводятся в квадрат, и один большой промах сильно увеличивает потерю."],
+   ["Чем MAE отличается от MSE?","MAE берёт модуль ошибки, а не квадрат, поэтому меньше реагирует на выбросы."],
+   ["Что такое b в линейной модели?","Свободный член: значение предсказания, когда все признаки равны нулю."]
+  ],
+  quiz:[
+   {q:"Ошибки модели: 1, −1, 2. Чему равна MSE?", o:["2/3","2","4/3"], a:1, why:"(1 + 1 + 4) / 3 = 2."},
+   {q:"Какой параметр задаёт наклон прямой?", o:["b","w","ŷ"], a:1, why:"w — вес, он умножается на x и задаёт наклон."},
+   {q:"В данных много выбросов. Какая потеря устойчивее?", o:["MSE","MAE"], a:1, why:"MAE не возводит ошибку в квадрат, поэтому выбросы влияют меньше."}
+  ]},
+{ id:"gd", title:"Градиентный спуск",
+  lesson:[
+   "Представь, что стоишь на склоне в тумане и хочешь спуститься. Нащупываешь, куда склон уходит круче всего, и делаешь шаг туда. Это и есть <b>градиентный спуск</b>.",
+   "<b>Градиент</b> — вектор частных производных функции потерь по параметрам. Он указывает направление наибольшего роста потерь, поэтому мы идём в обратную сторону: <code>w ← w − η·∇L</code>.",
+   "<b>η (learning rate)</b> — размер шага. Слишком большой: модель перескакивает минимум и расходится. Слишком маленький: обучение идёт очень долго.",
+   "На больших данных градиент считают не по всем примерам, а по небольшой пачке — <b>мини-батчу</b>. Один проход по всем данным называется <b>эпохой</b>. Популярные улучшения: momentum и Adam."
+  ],
+  cards:[
+   ["Что показывает градиент?","Направление, в котором функция потерь растёт быстрее всего."],
+   ["Формула шага градиентного спуска?","w ← w − η·∇L(w)"],
+   ["Что будет при слишком большом learning rate?","Шаги перескакивают минимум, потери скачут или растут."],
+   ["Что такое эпоха?","Один полный проход по всему обучающему набору."],
+   ["Что такое мини-батч?","Небольшая порция примеров, по которой считается градиент на одном шаге."],
+   ["Что такое Adam?","Оптимизатор, который подбирает свой шаг для каждого параметра и использует инерцию (momentum)."]
+  ],
+  quiz:[
+   {q:"Потери растут с каждой итерацией. Что вероятнее всего?", o:["Learning rate слишком большой","Learning rate слишком маленький","Слишком много данных"], a:0, why:"Слишком большие шаги перелетают минимум, и ошибка начинает расти."},
+   {q:"Почему градиент вычитают, а не прибавляют?", o:["Так быстрее считать","Градиент указывает на рост потерь, а нам нужно уменьшение","Это просто договорённость"], a:1, why:"Мы минимизируем потери, поэтому идём против направления их роста."},
+   {q:"1000 примеров, батч 100. Сколько шагов в одной эпохе?", o:["100","10","1000"], a:1, why:"1000 / 100 = 10 шагов."}
+  ]},
+{ id:"overfit", title:"Переобучение и регуляризация",
+  lesson:[
+   "<b>Переобучение</b> (overfitting): модель запомнила обучающие данные вместе с шумом и плохо работает на новых. <b>Недообучение</b>: модель слишком простая и не ловит даже основную закономерность.",
+   "Поэтому данные делят на три части. <b>Train</b> — на нём учимся. <b>Validation</b> — подбираем гиперпараметры. <b>Test</b> — честная финальная оценка, которую не трогаем до конца. Признак переобучения: ошибка на train падает, а на validation растёт.",
+   "Что помогает: больше данных, более простая модель, ранняя остановка, dropout в нейросетях и <b>регуляризация</b>.",
+   "Регуляризация добавляет к потере штраф за большие веса. <b>L2</b> (Ridge) — сумма квадратов весов, равномерно уменьшает их. <b>L1</b> (Lasso) — сумма модулей, многие веса делает ровно нулём и так отбирает признаки."
+  ],
+  cards:[
+   ["Что такое переобучение?","Модель хорошо работает на обучающих данных и плохо на новых: она выучила шум."],
+   ["Зачем нужна валидационная выборка?","Чтобы подбирать гиперпараметры и следить за переобучением, не трогая тест."],
+   ["Как переобучение выглядит на графиках потерь?","Train loss продолжает падать, а validation loss начинает расти."],
+   ["Чем L1 отличается от L2?","L1 зануляет часть весов (отбор признаков), L2 равномерно уменьшает все веса."],
+   ["Что такое ранняя остановка?","Остановка обучения, когда ошибка на валидации перестаёт улучшаться."],
+   ["У слишком простой модели высокий bias или variance?","Высокий bias: она недообучается."]
+  ],
+  quiz:[
+   {q:"Train accuracy 99%, test 62%. Диагноз?", o:["Недообучение","Переобучение","Всё отлично"], a:1, why:"Огромный разрыв между train и test — классическое переобучение."},
+   {q:"Какая регуляризация может обнулить веса?", o:["L1","L2"], a:0, why:"Штраф L1 (Lasso) толкает часть весов ровно в ноль."},
+   {q:"На какой выборке подбирать гиперпараметры?", o:["Train","Validation","Test"], a:1, why:"Test оставляем для финальной оценки, иначе она получится завышенной."}
+  ]},
+{ id:"clf", title:"Классификация и метрики",
+  lesson:[
+   "<b>Логистическая регрессия</b> — базовый классификатор. Она считает линейную комбинацию признаков и пропускает её через сигмоиду <code>σ(z) = 1 / (1 + e⁻ᶻ)</code>, получая вероятность класса от 0 до 1. Обучается на потере log loss (кросс-энтропии).",
+   "<b>Accuracy</b>, доля верных ответов, обманчива при дисбалансе. Если 99% писем не спам, модель «всегда не спам» получит 99% и при этом бесполезна.",
+   "Матрица ошибок: TP, FP, FN, TN. <b>Precision</b> = <code>TP / (TP + FP)</code>: из того, что модель назвала положительным, какая доля верна. <b>Recall</b> = <code>TP / (TP + FN)</code>: какую долю настоящих положительных нашли.",
+   "<b>F1</b> — гармоническое среднее precision и recall. <b>ROC-AUC</b> оценивает, насколько хорошо модель ранжирует объекты по вероятности при всех порогах."
+  ],
+  cards:[
+   ["Что делает сигмоида?","Превращает любое число в значение от 0 до 1, которое читают как вероятность."],
+   ["Формула precision?","TP / (TP + FP)"],
+   ["Формула recall?","TP / (TP + FN)"],
+   ["Когда accuracy вводит в заблуждение?","При сильном дисбалансе классов."],
+   ["Что такое F1?","Гармоническое среднее precision и recall."],
+   ["Какая потеря у логистической регрессии?","Log loss (бинарная кросс-энтропия)."]
+  ],
+  quiz:[
+   {q:"Тест на редкую болезнь: важно не пропустить больных. Что максимизировать?", o:["Precision","Recall","Accuracy"], a:1, why:"Recall — это доля найденных настоящих случаев."},
+   {q:"TP = 8, FP = 2, FN = 8. Чему равен precision?", o:["0.8","0.5","0.2"], a:0, why:"8 / (8 + 2) = 0.8. А recall здесь 8 / 16 = 0.5."},
+   {q:"σ(0) равно…", o:["0","0.5","1"], a:1, why:"1 / (1 + e⁰) = 1/2."}
+  ]},
+{ id:"trees", title:"Деревья и ансамбли",
+  lesson:[
+   "<b>Решающее дерево</b> задаёт цепочку вопросов: «площадь больше 50 м²?» → «район центральный?» → ответ. В каждом узле выбирается разбиение, которое лучше всего разделяет данные (например, по критерию Джини).",
+   "Одно глубокое дерево легко переобучается, поэтому деревья объединяют в <b>ансамбли</b>.",
+   "<b>Random Forest</b> (бэггинг): много деревьев учатся на случайных подвыборках данных и признаков, их ответы усредняются. Это снижает разброс.",
+   "<b>Градиентный бустинг</b>: деревья строятся по очереди, и каждое следующее исправляет ошибки предыдущих. XGBoost, LightGBM и CatBoost — стандарт для табличных данных."
+  ],
+  cards:[
+   ["Как дерево делает предсказание?","Проходит цепочку вопросов о признаках от корня до листа; в листе — ответ."],
+   ["Что такое бэггинг?","Обучение многих моделей на случайных подвыборках и усреднение их ответов."],
+   ["Чем бустинг отличается от бэггинга?","В бустинге модели строятся последовательно и исправляют ошибки предыдущих, в бэггинге — независимо."],
+   ["Что в основном снижает Random Forest: bias или variance?","Variance (разброс)."],
+   ["Три библиотеки градиентного бустинга?","XGBoost, LightGBM, CatBoost."],
+   ["Что такое критерий Джини?","Мера смешанности классов в узле; разбиение выбирают так, чтобы её уменьшить."]
+  ],
+  quiz:[
+   {q:"Какой подход строит деревья последовательно?", o:["Random Forest","Градиентный бустинг"], a:1, why:"В бустинге каждое дерево учится на ошибках уже построенного ансамбля."},
+   {q:"Хороший выбор по умолчанию для табличных данных?", o:["Градиентный бустинг","Одно глубокое дерево","k ближайших соседей"], a:0, why:"Бустинг на деревьях обычно лидирует на таблицах."},
+   {q:"Зачем Random Forest берёт случайные подмножества признаков?", o:["Чтобы деревья были разными и их ошибки не совпадали","Чтобы работать быстрее","Чтобы снизить bias"], a:0, why:"Непохожие деревья при усреднении сильнее снижают разброс."}
+  ]},
+{ id:"nn", title:"Нейросети",
+  lesson:[
+   "<b>Нейрон</b> считает взвешенную сумму входов плюс смещение и пропускает её через функцию активации: <code>a = f(w·x + b)</code>. Слои нейронов друг за другом образуют многослойный перцептрон.",
+   "Без <b>нелинейной активации</b> любая глубина сводится к одной линейной функции. Популярные активации: <code>ReLU = max(0, z)</code>, сигмоида, tanh. На выходе классификатора стоит <b>softmax</b>, который превращает числа в вероятности.",
+   "Обучение: <b>прямой проход</b> даёт предсказание и потерю, <b>обратное распространение</b> (backpropagation) по цепному правилу считает градиент по каждому весу, затем оптимизатор делает шаг.",
+   "Для изображений исторически используют свёрточные сети (CNN), для текста и последовательностей сейчас — трансформеры."
+  ],
+  cards:[
+   ["Формула одного нейрона?","a = f(w·x + b), где f — функция активации."],
+   ["Зачем нужна нелинейная активация?","Без неё несколько слоёв равносильны одному линейному преобразованию."],
+   ["Что такое ReLU?","f(z) = max(0, z)"],
+   ["Что делает softmax?","Превращает вектор чисел в вероятности, сумма которых равна 1."],
+   ["Что такое backpropagation?","Вычисление градиентов потерь по всем весам через цепное правило, от выхода к входу."],
+   ["Что такое dropout?","Случайное отключение части нейронов при обучении для борьбы с переобучением."]
+  ],
+  quiz:[
+   {q:"ReLU(−3) = ?", o:["−3","0","3"], a:1, why:"max(0, −3) = 0."},
+   {q:"Сеть из 5 линейных слоёв без активаций равносильна…", o:["Одному линейному слою","Глубокой нелинейной модели","Решающему дереву"], a:0, why:"Композиция линейных функций — снова линейная функция."},
+   {q:"Какой шаг считает градиенты?", o:["Прямой проход","Backpropagation","Softmax"], a:1, why:"Обратное распространение идёт от потери к входам и считает производные."}
+  ]},
+{ id:"transformers", title:"Трансформеры и внимание",
+  lesson:[
+   "<b>Трансформер</b> — архитектура из статьи «Attention Is All You Need» (2017). На ней построены современные языковые модели.",
+   "Текст режется на <b>токены</b>, каждый токен превращается в вектор — <b>эмбеддинг</b>. Механизм внимания сам по себе не знает порядок слов, поэтому добавляют <b>позиционное кодирование</b>.",
+   "Главная идея — <b>self-attention</b>. Для каждого токена считаются три вектора: query, key и value. Сравнение query одного токена с key остальных даёт веса, с которыми смешиваются value: <code>softmax(QKᵀ / √d) · V</code>. Так каждый токен «смотрит» на важные для него слова.",
+   "<b>Multi-head attention</b> запускает несколько таких механизмов параллельно. GPT-подобные модели — декодеры, обученные предсказывать следующий токен."
+  ],
+  cards:[
+   ["Что такое токен?","Кусочек текста (слово или часть слова), с которым работает модель."],
+   ["Что такое эмбеддинг?","Вектор чисел, представляющий токен так, что близкие по смыслу токены оказываются рядом."],
+   ["Какие три вектора считаются в self-attention?","Query, key и value."],
+   ["Формула внимания?","softmax(QKᵀ / √d) · V"],
+   ["Зачем позиционное кодирование?","Attention сам по себе не знает порядок токенов; кодирование добавляет информацию о позиции."],
+   ["На какой задаче обучаются GPT-модели?","Предсказание следующего токена."]
+  ],
+  quiz:[
+   {q:"Зачем делить QKᵀ на √d?", o:["Чтобы значения не росли и softmax не насыщался","Чтобы быстрее считать","Чтобы получить вероятности"], a:0, why:"При большой размерности скалярные произведения растут, и softmax становится слишком острым."},
+   {q:"Что смешивается с весами внимания?", o:["Query","Key","Value"], a:2, why:"Веса из сравнения query и key применяются к value."},
+   {q:"В каком году вышла «Attention Is All You Need»?", o:["2012","2017","2020"], a:1, why:"Статью опубликовали в 2017 году."}
+  ]}
+];
+
+/* ===== Модуль 1. Python и инструменты анализа данных ===== */
+const M1 = [
+T(`py-env`, `Среда разработки и Jupyter`, [
+  `Для анализа данных Python обычно ставят через Anaconda или <code>pip</code> в <b>виртуальном окружении</b>: <code>python -m venv .venv</code>. Окружение изолирует версии библиотек одного проекта от других.`,
+  `<b>Jupyter Notebook</b> — документ из ячеек: код, текст в Markdown и результаты рядом. Запустил ячейку, посмотрел график, поправил. Аналоги: JupyterLab, Google Colab (бесплатный GPU), VS Code с расширением Jupyter.`,
+  `Ловушка: ячейки можно запускать в любом порядке, а <b>ядро</b> (kernel) хранит все переменные. Перед сдачей делай <b>Restart & Run All</b>, чтобы ноутбук точно работал сверху вниз.`,
+  `Магические команды: <code>%timeit</code> замеряет время, <code>!pip install</code> запускает команду терминала, <code>%matplotlib inline</code> встраивает графики.`
+], [
+  [`Зачем нужно виртуальное окружение?`, `Чтобы изолировать версии библиотек проекта от системы и других проектов.`],
+  [`Что такое ядро (kernel) в Jupyter?`, `Процесс Python, который выполняет ячейки и хранит все переменные.`],
+  [`Зачем делать Restart & Run All?`, `Проверить, что ноутбук работает сверху вниз без скрытого состояния.`],
+  [`Что делает %timeit?`, `Замеряет время выполнения кода, прогоняя его много раз.`],
+  [`Чем полезен Google Colab?`, `Бесплатный Jupyter в облаке с доступом к GPU.`]
+], [
+  [`Ячейку, создавшую переменную, удалили. Что будет после Restart & Run All?`, [`Всё сработает`, `NameError там, где переменная используется`, `Jupyter восстановит ячейку`], 1, `После перезапуска ядра переменной нет: её создавала удалённая ячейка.`],
+  [`Как установить пакет прямо из ячейки?`, [`!pip install pandas`, `import install pandas`, `%install pandas`], 0, `Восклицательный знак запускает команду оболочки.`],
+  [`Где взять бесплатный GPU в браузере?`, [`JupyterLab`, `Google Colab`, `venv`], 1, `Colab — облачный Jupyter от Google с GPU.`]
+]),
+
+T(`py-basics`, `Основы Python`, [
+  `Базовые типы: <code>int</code>, <code>float</code>, <code>str</code>, <code>bool</code>, <code>None</code>. Коллекции: <b>list</b> (изменяемый список), <b>tuple</b> (неизменяемый), <b>dict</b> (ключ → значение), <b>set</b> (уникальные элементы).`,
+  `Функции объявляют через <code>def</code>, у параметров бывают значения по умолчанию, несколько значений возвращают кортежем. <code>lambda x: x * 2</code> — короткая безымянная функция.`,
+  `<b>List comprehension</b> — компактный способ построить коллекцию:`,
+  C(`squares = [x**2 for x in range(10) if x % 2 == 0]
+# [0, 4, 16, 36, 64]
+lengths = {w: len(w) for w in ["ml", "numpy"]}   # dict comprehension`),
+  `Ловушка: изменяемое значение по умолчанию <code>def f(a=[])</code> создаётся один раз и копит данные между вызовами. Пиши <code>a=None</code> и создавай список внутри.`
+], [
+  [`Чем list отличается от tuple?`, `list можно изменять, tuple — нет.`],
+  [`Квадраты чётных чисел от 0 до 9 одной строкой?`, `[x**2 for x in range(10) if x % 2 == 0]`],
+  [`Что такое lambda?`, `Короткая анонимная функция из одного выражения.`],
+  [`Почему опасно def f(a=[])?`, `Список по умолчанию создаётся один раз и сохраняет изменения между вызовами.`],
+  [`Какой тип хранит только уникальные элементы?`, `set`]
+], [
+  [`Что вернёт [x*2 for x in [1, 2, 3] if x > 1]?`, [`[2, 4, 6]`, `[4, 6]`, `[1, 4, 6]`], 1, `Фильтр оставляет 2 и 3, затем умножение на 2.`],
+  [`Что можно использовать как ключ словаря?`, [`list`, `tuple`, `dict`], 1, `Ключ должен быть неизменяемым (хешируемым); tuple подходит.`],
+  [`len({1, 1, 2, 3}) = ?`, [`4`, `3`, `2`], 1, `В множестве дубликаты удаляются: {1, 2, 3}.`]
+]),
+
+T(`numpy`, `NumPy и broadcasting`, [
+  `<b>NumPy</b> хранит данные в массивах <code>ndarray</code> одного типа в непрерывной памяти. Операции над целым массивом (<b>векторизация</b>) выполняются в C и в десятки раз быстрее циклов Python.`,
+  `У массива есть <code>shape</code>, <code>dtype</code>, <code>ndim</code>. Часто нужны: <code>np.arange</code>, <code>reshape</code>, индексация маской <code>a[a > 0]</code>, агрегации по оси <code>a.sum(axis=0)</code>.`,
+  `<b>Broadcasting</b> — правила работы с массивами разной формы. Формы сравниваются с конца: размерности совместимы, если они равны или одна из них равна 1.`,
+  C(`X = np.random.rand(100, 3)          # 100 объектов, 3 признака
+X_norm = (X - X.mean(axis=0)) / X.std(axis=0)
+# (100, 3) - (3,) → работает через broadcasting`)
+], [
+  [`Почему векторные операции NumPy быстрее циклов?`, `Они выполняются в скомпилированном C над непрерывной памятью без накладных расходов Python.`],
+  [`Правило broadcasting?`, `Формы сравниваются с конца; размерности совместимы, если равны или одна из них 1.`],
+  [`Что делает a.sum(axis=0) для матрицы?`, `Сворачивает строки и даёт сумму каждого столбца.`],
+  [`Как выбрать положительные элементы массива a?`, `a[a > 0] — индексация булевой маской.`],
+  [`Что такое dtype?`, `Тип элементов массива, например float64 или int32.`]
+], [
+  [`Можно ли сложить массивы формы (4, 3) и (4,)?`, [`Да`, `Нет`], 1, `Сравниваем с конца: 3 и 4 не равны, и ни одна не 1. Массив формы (4, 1) уже подошёл бы.`],
+  [`Форма результата (5, 1) + (1, 4)?`, [`(5, 4)`, `(5, 1)`, `Ошибка`], 0, `Единичные оси растягиваются, получается (5, 4).`],
+  [`np.arange(12).reshape(3, -1).shape = ?`, [`(3, 4)`, `(4, 3)`, `(3, 12)`], 0, `−1 означает «посчитай сам»: 12 / 3 = 4.`]
+]),
+
+T(`pandas`, `Pandas: DataFrame и очистка`, [
+  `<b>DataFrame</b> — таблица с индексом строк и именованными столбцами; каждый столбец — <b>Series</b>. Загрузка: <code>pd.read_csv("data.csv")</code>. Первый осмотр: <code>head()</code>, <code>info()</code>, <code>describe()</code>.`,
+  `Выбор данных: <code>df["col"]</code>; <code>df.loc[строки, столбцы]</code> по меткам; <code>df.iloc[...]</code> по позициям; фильтр <code>df[df.age > 30]</code>.`,
+  `Очистка: пропуски — <code>df.isna().sum()</code>, затем <code>fillna()</code> или <code>dropna()</code>; дубликаты — <code>drop_duplicates()</code>; типы — <code>astype()</code>; даты — <code>pd.to_datetime()</code>.`,
+  `Новые столбцы считай векторно: <code>df["bmi"] = df.weight / df.height**2</code>. Избегай циклов по строкам и <code>apply</code>, если есть векторная операция.`
+], [
+  [`Чем loc отличается от iloc?`, `loc выбирает по меткам индекса и названиям столбцов, iloc — по номерам позиций.`],
+  [`Как посчитать пропуски в каждом столбце?`, `df.isna().sum()`],
+  [`Что показывает df.describe()?`, `Статистики числовых столбцов: count, mean, std, min, квартили, max.`],
+  [`Как удалить повторяющиеся строки?`, `df.drop_duplicates()`],
+  [`Как превратить строку с датой в дату?`, `pd.to_datetime(df["col"])`]
+], [
+  [`df.iloc[0] возвращает…`, [`Первую строку`, `Строку с меткой 0`, `Первый столбец`], 0, `iloc работает по позиции, значит первая строка.`],
+  [`Как отфильтровать строки, где price > 100?`, [`df.filter(price > 100)`, `df[df.price > 100]`, `df.where(100)`], 1, `Булева маска в квадратных скобках.`],
+  [`Какой метод сразу показывает типы столбцов и число непустых значений?`, [`df.info()`, `df.head()`, `df.shape`], 0, `info() печатает dtypes и non-null counts.`]
+]),
+
+T(`pandas2`, `groupby и merge`, [
+  `<b>groupby</b> работает по схеме split → apply → combine: разбить таблицу на группы, посчитать что-то в каждой, собрать результат.`,
+  C(`df.groupby("city")["price"].mean()
+df.groupby(["city", "rooms"]).agg(n=("price", "size"),
+                                   avg=("price", "mean"))`),
+  `<b>merge</b> соединяет таблицы по ключу, как JOIN в SQL. <code>how="inner"</code> оставляет совпавшие ключи, <code>"left"</code> — все строки левой таблицы, <code>"outer"</code> — все строки обеих.`,
+  `<code>pd.concat</code> склеивает таблицы друг под другом или рядом. <code>pivot_table</code> строит сводную таблицу, <code>value_counts()</code> быстро считает частоты.`
+], [
+  [`Схема работы groupby?`, `Split → apply → combine: разбить на группы, посчитать, собрать.`],
+  [`Чем merge how="left" отличается от "inner"?`, `left сохраняет все строки левой таблицы, inner — только ключи, которые есть в обеих.`],
+  [`Как посчитать частоты значений в столбце?`, `df["col"].value_counts()`],
+  [`Чем concat отличается от merge?`, `concat просто склеивает таблицы, merge соединяет их по ключу.`],
+  [`Как получить несколько агрегатов сразу?`, `Через .agg(), например agg(avg=("price", "mean"), n=("price", "size")).`]
+], [
+  [`В левой таблице 100 клиентов, у 20 нет заказов. Сколько клиентов останется после inner merge с заказами?`, [`100`, `80`, `120`], 1, `inner оставляет только совпавшие ключи.`],
+  [`Средняя цена по каждому городу:`, [`df.mean("city")`, `df.groupby("city")["price"].mean()`, `df["city"].mean()`], 1, `Группируем по city, берём price, считаем mean.`],
+  [`Что получат клиенты без заказов после merge(how="left")?`, [`Их удалят`, `NaN в столбцах заказов`, `Нули`], 1, `Недостающие значения заполняются NaN.`]
+]),
+
+T(`viz`, `Визуализация`, [
+  `<b>Matplotlib</b> — базовая библиотека. Объектный стиль: <code>fig, ax = plt.subplots()</code>, затем <code>ax.plot</code>, <code>ax.hist</code>, <code>ax.scatter</code>, подписи <code>ax.set_xlabel</code>.`,
+  `<b>Seaborn</b> работает поверх Matplotlib прямо с DataFrame: <code>sns.histplot</code>, <code>sns.boxplot</code>, <code>sns.scatterplot(hue=...)</code>, <code>sns.heatmap(df.corr())</code>.`,
+  `<b>Plotly</b> строит интерактивные графики с наведением и зумом: <code>px.scatter(df, x=..., y=..., color=...)</code>. Удобен для дашбордов и презентаций.`,
+  `Какой график выбрать: распределение одной переменной — гистограмма или boxplot; связь двух числовых — scatter; сравнение категорий — bar; динамика во времени — line; корреляции — heatmap.`
+], [
+  [`Чем смотреть распределение одной числовой переменной?`, `Гистограммой или boxplot.`],
+  [`Что показывает boxplot?`, `Медиану, квартили, размах и выбросы.`],
+  [`Как в seaborn раскрасить точки по категории?`, `Параметром hue.`],
+  [`Чем Plotly отличается от Matplotlib?`, `Plotly строит интерактивные графики с наведением и зумом.`],
+  [`Как визуализировать матрицу корреляций?`, `sns.heatmap(df.corr(numeric_only=True), annot=True)`]
+], [
+  [`Как выручка менялась по месяцам — какой график?`, [`Линейный`, `Круговой`, `Гистограмма`], 0, `Динамику во времени показывает line plot.`],
+  [`Что означают точки за усами boxplot?`, [`Медиану`, `Возможные выбросы`, `Среднее`], 1, `Точки дальше 1.5·IQR от квартилей — кандидаты в выбросы.`],
+  [`Где px.scatter строит интерактивный график одной строкой?`, [`Seaborn`, `Plotly Express`, `Matplotlib`], 1, `px — это plotly.express.`]
+]),
+
+T(`eda`, `EDA: разведочный анализ`, [
+  `<b>EDA</b> (exploratory data analysis) — знакомство с данными до моделирования. Цель: понять структуру, найти проблемы и гипотезы.`,
+  `Типичный порядок: 1) размер, типы, пропуски, дубликаты; 2) распределение каждой переменной; 3) выбросы; 4) связь признаков с целевой переменной; 5) корреляции признаков между собой.`,
+  `Ищи <b>утечки данных</b> (leakage) — признаки с информацией из будущего или о самом ответе. Например, «дата расторжения договора» в задаче предсказания оттока.`,
+  `Итог EDA — короткие выводы: что чистить, какие признаки построить, какие гипотезы проверить. В сквозном проекте пиши их Markdown-ячейками прямо в ноутбуке.`
+], [
+  [`Что такое EDA?`, `Разведочный анализ: изучение структуры, распределений, связей и проблем в данных до моделирования.`],
+  [`Что такое утечка данных (leakage)?`, `Признак содержит информацию, недоступную в момент предсказания, и завышает качество модели.`],
+  [`С чего начинается EDA?`, `С размера таблицы, типов столбцов, пропусков и дубликатов.`],
+  [`Зачем смотреть корреляции признаков между собой?`, `Чтобы найти дублирующиеся (мультиколлинеарные) признаки.`],
+  [`Чем заканчивается EDA?`, `Выводами: что чистить, какие признаки строить, какие гипотезы проверять.`]
+], [
+  [`Модель оттока показывает 99.9% качества. Что проверить первым?`, [`Утечку данных`, `Learning rate`, `Число эпох`], 0, `Подозрительно высокое качество часто означает leakage.`],
+  [`Признак «сумма возврата» в задаче «вернёт ли клиент товар» — это…`, [`Хороший признак`, `Утечка`, `Целевая переменная`], 1, `Сумма возврата известна только после возврата.`],
+  [`Как быстро посмотреть все попарные связи числовых признаков?`, [`sns.pairplot(df)`, `df.head()`, `df.dtypes`], 0, `pairplot рисует scatter для каждой пары и распределения на диагонали.`]
+])
+];
+
+/* ===== Модуль 2. Статистика и вайбкодинг с AI ===== */
+const M2 = [
+T(`descstat`, `Описательная статистика`, [
+  `Меры центра: <b>среднее</b> (чувствительно к выбросам), <b>медиана</b> (середина отсортированных данных, устойчива), <b>мода</b> (самое частое значение).`,
+  `Меры разброса: <b>дисперсия</b> — средний квадрат отклонения от среднего; <b>стандартное отклонение</b> σ — корень из неё, в тех же единицах, что данные; <b>IQR</b> = Q3 − Q1, разброс средней половины данных.`,
+  `Форма распределения: <b>асимметрия</b> (skewness). При длинном правом хвосте (зарплаты, цены) среднее больше медианы.`,
+  `Связь двух переменных: <b>корреляция Пирсона</b> от −1 до 1 измеряет линейную связь. Корреляция не означает причинность.`
+], [
+  [`Почему медиана устойчивее среднего?`, `Выбросы почти не сдвигают середину отсортированного ряда.`],
+  [`Что такое стандартное отклонение?`, `Корень из дисперсии: типичное отклонение от среднего в исходных единицах.`],
+  [`Что такое IQR?`, `Q3 − Q1, разброс средних 50% данных.`],
+  [`Где среднее при правой асимметрии?`, `Правее медианы: хвост тянет его вверх.`],
+  [`Что измеряет корреляция Пирсона?`, `Силу и направление линейной связи, от −1 до 1.`]
+], [
+  [`Зарплаты: 50, 55, 60, 65, 1000. Что лучше описывает типичную зарплату?`, [`Среднее`, `Медиана`], 1, `Выброс тянет среднее до 246, медиана = 60.`],
+  [`Корреляция −0.9 означает…`, [`Связи нет`, `Сильную обратную линейную связь`, `Слабую прямую связь`], 1, `Знак — направление, модуль — сила.`],
+  [`Дисперсия данных в метрах измеряется в…`, [`метрах`, `метрах²`, `безразмерна`], 1, `Квадраты отклонений дают квадратные единицы.`]
+]),
+
+T(`distr`, `Распределения и ЦПТ`, [
+  `<b>Нормальное распределение</b> N(μ, σ²) — колокол. Правило 68–95–99.7: в пределах 1, 2 и 3 σ от среднего лежат 68%, 95% и 99.7% значений.`,
+  `Другие частые распределения: <b>биномиальное</b> (число успехов в n испытаниях), <b>Пуассона</b> (число событий за интервал), <b>равномерное</b>, <b>экспоненциальное</b> (время до события).`,
+  `<b>Центральная предельная теорема</b> (ЦПТ): среднее большого числа независимых наблюдений распределено примерно нормально, каким бы ни было исходное распределение. Стандартная ошибка среднего: <code>SE = σ / √n</code>.`,
+  `Именно ЦПТ позволяет применять t-тест и строить доверительные интервалы для средних, даже если сами данные не нормальны.`
+], [
+  [`Правило 68–95–99.7?`, `Доли значений нормального распределения в пределах 1, 2 и 3 σ от среднего.`],
+  [`Что утверждает ЦПТ?`, `Выборочное среднее при большом n распределено примерно нормально независимо от исходного распределения.`],
+  [`Формула стандартной ошибки среднего?`, `SE = σ / √n`],
+  [`Какое распределение у числа успехов в n испытаниях?`, `Биномиальное.`],
+  [`Какое распределение у числа звонков в колл-центр за час?`, `Пуассона.`]
+], [
+  [`Во сколько раз уменьшится SE, если выборку увеличить в 4 раза?`, [`В 4`, `В 2`, `Не изменится`], 1, `SE ∝ 1/√n, а √4 = 2.`],
+  [`Рост ~ N(175, 10²). Какая доля людей выше 195 см?`, [`≈ 2.5%`, `≈ 5%`, `≈ 16%`], 0, `195 = μ + 2σ. За пределами ±2σ — 5%, с одной стороны — 2.5%.`],
+  [`ЦПТ говорит о распределении…`, [`Самих данных`, `Выборочного среднего`, `Медианы`], 1, `Нормальным становится распределение средних, а не исходных значений.`]
+]),
+
+T(`hyp`, `Гипотезы, p-value и t-test`, [
+  `Схема: <b>H₀</b> — «эффекта нет», <b>H₁</b> — альтернатива. Задаём уровень значимости α (обычно 0.05), считаем по данным статистику и p-value.`,
+  `<b>p-value</b> — вероятность получить такой же или более экстремальный результат, <i>если H₀ верна</i>. Если p < α, отвергаем H₀. Это не вероятность того, что H₀ верна.`,
+  `Ошибка <b>I рода</b> — отвергли верную H₀ (ложная тревога, вероятность α). Ошибка <b>II рода</b> — пропустили реальный эффект (β). <b>Мощность</b> = 1 − β.`,
+  `<b>t-тест</b> сравнивает средние: одновыборочный (среднее против числа), двухвыборочный для независимых групп (тест Уэлча при разных дисперсиях), парный — для измерений «до/после» на одних и тех же объектах.`,
+  C(`from scipy import stats
+t, p = stats.ttest_ind(a, b, equal_var=False)   # Welch
+t, p = stats.ttest_rel(before, after)          # парный`)
+], [
+  [`Что такое p-value?`, `Вероятность получить такой или более экстремальный результат при условии, что H₀ верна.`],
+  [`Ошибка I рода?`, `Отвергнуть верную нулевую гипотезу (ложное срабатывание).`],
+  [`Что такое мощность теста?`, `Вероятность обнаружить эффект, если он есть: 1 − β.`],
+  [`Когда нужен парный t-тест?`, `Когда измерения связаны: одни и те же объекты до и после.`],
+  [`Что такое тест Уэлча?`, `t-тест для двух групп без предположения о равных дисперсиях.`]
+], [
+  [`p = 0.03 при α = 0.05. Вывод?`, [`Отвергаем H₀`, `H₀ доказана`, `H₀ верна с вероятностью 3%`], 0, `p < α, значит отвергаем H₀. p-value — не вероятность самой гипотезы.`],
+  [`Вес пациентов до и после диеты. Какой тест?`, [`Двухвыборочный независимый`, `Парный t-тест`, `χ²`], 1, `Одни и те же люди измерены дважды.`],
+  [`Что увеличивает мощность теста?`, [`Меньшая выборка`, `Большая выборка`, `Меньшее α`], 1, `Больше данных — меньше SE, эффект заметнее.`]
+]),
+
+T(`chi`, `χ² и доверительные интервалы`, [
+  `<b>Критерий χ²</b> работает с категориальными данными. Тест независимости проверяет, связаны ли две категории (например, город и способ оплаты): сравнивает наблюдаемые частоты в таблице сопряжённости с ожидаемыми при независимости.`,
+  C(`table = pd.crosstab(df.city, df.payment)
+chi2, p, dof, expected = stats.chi2_contingency(table)`),
+  `<b>Доверительный интервал</b> (ДИ) — диапазон, который при многократном повторении эксперимента в 95% случаев накрывает истинный параметр. Для среднего: <code>x̄ ± t·SE</code>, при большом n примерно <code>x̄ ± 1.96·SE</code>.`,
+  `Если 95%-ный ДИ для разницы средних не содержит 0, разница значима на уровне 0.05. Сузить интервал помогает большая выборка.`
+], [
+  [`Для каких данных нужен χ²?`, `Для категориальных: частоты в таблице сопряжённости.`],
+  [`Что проверяет χ²-тест независимости?`, `Связаны ли две категориальные переменные.`],
+  [`Формула 95% ДИ для среднего при большом n?`, `x̄ ± 1.96·SE`],
+  [`ДИ для разницы не содержит 0. Что это значит?`, `Разница статистически значима на соответствующем уровне.`],
+  [`Как сузить доверительный интервал?`, `Увеличить выборку.`]
+], [
+  [`Связан ли город с выбором способа оплаты? Какой тест?`, [`t-test`, `χ² независимости`, `Корреляция Пирсона`], 1, `Обе переменные категориальные.`],
+  [`95% ДИ для разницы конверсий: [−0.4%, 1.2%]. Вывод?`, [`Разница значима`, `Значимой разницы не видно`, `Вариант B хуже`], 1, `Интервал содержит 0.`],
+  [`x̄ = 50, SE = 2. Примерный 95% ДИ?`, [`[48, 52]`, `[46, 54]`, `[44, 56]`], 1, `50 ± 1.96·2 ≈ 50 ± 4.`]
+]),
+
+T(`ab`, `A/B-тестирование`, [
+  `<b>A/B-тест</b>: пользователей случайно делят на контроль (A) и тест (B) и сравнивают метрику. Случайность нужна, чтобы группы отличались только изменением.`,
+  `До старта выбирают <b>основную метрику</b> (конверсия, выручка на пользователя), задают α, мощность (обычно 80%) и <b>MDE</b> — минимальный эффект, который хотим заметить. По ним считают размер выборки и длительность.`,
+  `Ловушка <b>подглядывания</b> (peeking): если проверять p-value каждый день и остановиться при первом p < 0.05, ложных срабатываний становится намного больше. Длительность фиксируют заранее или используют последовательные методы.`,
+  `Ещё ловушки: <b>множественные сравнения</b> (много метрик → поправка Бонферрони), <b>SRM</b> (деление трафика не совпало с планом), эффект новизны. Для конверсий — z-тест для долей или χ², для средних — t-тест.`
+], [
+  [`Зачем случайное распределение в A/B-тесте?`, `Чтобы группы отличались только тестируемым изменением.`],
+  [`Что такое MDE?`, `Минимальный эффект, который тест должен уметь обнаружить; от него зависит размер выборки.`],
+  [`Что такое peeking?`, `Остановка теста при первом значимом результате; сильно завышает долю ложных срабатываний.`],
+  [`Что такое поправка Бонферрони?`, `Деление α на число проверок при множественных сравнениях.`],
+  [`Что такое SRM?`, `Sample ratio mismatch: фактическое деление трафика не совпадает с запланированным.`]
+], [
+  [`Проверяем 10 метрик при α = 0.05. Порог для каждой по Бонферрони?`, [`0.05`, `0.005`, `0.5`], 1, `0.05 / 10.`],
+  [`Планировали 50/50, на большой выборке получили 45/55. Что делать?`, [`Радоваться`, `Искать причину SRM`, `Удвоить выборку`], 1, `Перекос деления указывает на баг; результатам нельзя доверять.`],
+  [`Что уменьшает нужный размер выборки?`, [`Меньший MDE`, `Больший MDE`, `Большая мощность`], 1, `Крупный эффект легче заметить.`]
+]),
+
+T(`vibe`, `Вайбкодинг и промпты для кода`, [
+  `<b>Вайбкодинг</b> — разработка, где код в основном пишет AI-ассистент (GitHub Copilot, Claude, Cursor), а человек ставит задачи, проверяет и направляет.`,
+  `Хороший промпт для кода содержит <b>контекст</b> (данные, библиотеки, версии), <b>задачу</b>, <b>ограничения</b> (стиль, без новых зависимостей), <b>формат ответа</b> и пример входа и выхода.`,
+  `Для анализа данных давай модели <code>df.head()</code>, <code>df.dtypes</code> и описание столбцов: так она пишет код, который сразу работает с твоей таблицей.`,
+  `Правила: проверяй код и выводы (AI уверенно ошибается, особенно в статистике), проси тесты, не вставляй секреты и личные данные, разбивай задачу на шаги и держи код в git, чтобы откатиться.`
+], [
+  [`Что такое вайбкодинг?`, `Разработка, где код пишет AI-ассистент, а человек ставит задачи и проверяет результат.`],
+  [`Из чего состоит хороший промпт для кода?`, `Контекст, задача, ограничения, формат ответа, пример.`],
+  [`Что дать модели для кода по своей таблице?`, `df.head(), df.dtypes и описание столбцов.`],
+  [`Почему нельзя слепо доверять AI-коду?`, `Модель может уверенно ошибаться: неверная логика, статистика или несуществующие функции.`],
+  [`Зачем git при вайбкодинге?`, `Видеть изменения, сделанные AI, и откатываться к рабочей версии.`]
+], [
+  [`Какой промпт лучше?`, [`«Сделай анализ»`, `«Вот df.head() и dtypes; посчитай среднюю цену по city через groupby, pandas 2.x, без циклов»`], 1, `Есть контекст, задача и ограничения.`],
+  [`AI провёл t-тест и получил p = 0.0001. Что сделать?`, [`Сразу в отчёт`, `Проверить выбор теста и группы`, `Удалить выбросы`], 1, `Сначала проверь логику: тот ли тест и правильные ли данные.`],
+  [`Что нельзя вставлять в промпт?`, [`Описание столбцов`, `API-ключи и пароли`, `Пример выхода`], 1, `Секреты не должны попадать во внешние сервисы.`]
+])
+];
+
+/* ===== Модуль 3 (новые темы). Остальные темы модуля — из c10-mlbase.js ===== */
+const M3_NEW = [
+T(`knn-svm`, `KNN и SVM`, [
+  `<b>KNN</b> (k ближайших соседей): чтобы классифицировать объект, находим k самых похожих обучающих примеров и берём большинство голосов. Обучения как такового нет: модель просто запоминает данные.`,
+  `Маленькое k — модель шумная и переобучается, большое — слишком сглаживает. KNN считает расстояния, поэтому признаки обязательно <b>масштабируют</b> (StandardScaler), иначе зарплата перевесит возраст.`,
+  `<b>SVM</b> (метод опорных векторов) ищет разделяющую гиперплоскость с <b>максимальным зазором</b> (margin). <b>Опорные векторы</b> — ближайшие к границе точки; только они определяют решение.`,
+  `Параметр <b>C</b> балансирует ширину зазора и ошибки: большое C — меньше ошибок на train и риск переобучения. <b>Ядра</b> (kernel trick: RBF, полиномиальное) позволяют строить нелинейные границы.`
+], [
+  [`Как KNN классифицирует объект?`, `Голосованием k ближайших обучающих объектов.`],
+  [`Почему KNN нужно масштабирование?`, `Он считает расстояния, и признак с большим масштабом доминирует.`],
+  [`Что максимизирует SVM?`, `Зазор (margin) между классами.`],
+  [`Что такое опорные векторы?`, `Ближайшие к разделяющей границе точки, которые её определяют.`],
+  [`Зачем ядра в SVM?`, `Чтобы строить нелинейные границы, неявно переходя в пространство большей размерности.`]
+], [
+  [`KNN с k = 1 даёт на train 100%. Почему?`, [`Модель идеальна`, `Каждая точка — сосед сама себе`, `Ошибка в данных`], 1, `Ближайший сосед точки из train — она сама. Это переобучение.`],
+  [`Большое C в SVM означает…`, [`Широкий зазор, больше ошибок`, `Узкий зазор, меньше ошибок на train`, `Линейное ядро`], 1, `C — штраф за ошибки; высокий штраф сужает зазор.`],
+  [`Классы разделены окружностью. Что попробовать в SVM?`, [`Линейное ядро`, `RBF-ядро`, `Убрать масштабирование`], 1, `RBF строит нелинейные границы.`]
+]),
+
+T(`unsup`, `K-Means и PCA`, [
+  `<b>K-Means</b> делит данные на k кластеров: ставит k центров, относит каждую точку к ближайшему, пересчитывает центры как средние и повторяет до стабилизации. Минимизирует сумму квадратов расстояний до центров (inertia).`,
+  `k выбирают <b>методом локтя</b> (где inertia перестаёт резко падать) или по <b>силуэту</b>. K-Means любит шарообразные кластеры похожего размера и требует масштабирования.`,
+  `<b>PCA</b> (метод главных компонент) находит новые оси — направления наибольшей дисперсии — и проецирует данные на первые из них. Так 50 признаков превращаются, например, в 10 компонент, сохраняющих 95% дисперсии.`,
+  `PCA применяют для визуализации (2D-проекция), сжатия и борьбы с мультиколлинеарностью. Компоненты ортогональны и некоррелированы, но хуже интерпретируются.`
+], [
+  [`Шаги K-Means?`, `Поставить центры → отнести точки к ближайшему → пересчитать центры → повторять.`],
+  [`Как выбрать k в K-Means?`, `Методом локтя или по коэффициенту силуэта.`],
+  [`Что ищет PCA?`, `Ортогональные направления наибольшей дисперсии данных.`],
+  [`Что такое explained variance ratio?`, `Доля общей дисперсии, которую объясняет каждая главная компонента.`],
+  [`Чем PCA помогает при визуализации?`, `Проецирует многомерные данные на 2–3 компоненты.`]
+], [
+  [`Что минимизирует K-Means?`, [`Число кластеров`, `Сумму квадратов расстояний до центров`, `Дисперсию между кластерами`], 1, `Это inertia — внутрикластерная сумма квадратов.`],
+  [`Компоненты PCA объясняют 40%, 30%, 20%… Сколько сохранят первые две?`, [`70%`, `90%`, `40%`], 0, `40 + 30 = 70%.`],
+  [`Нужно ли масштабировать признаки перед PCA?`, [`Да`, `Нет`], 0, `Иначе признак с большой дисперсией в своих единицах доминирует.`]
+]),
+
+T(`fe`, `Feature Engineering`, [
+  `<b>Feature engineering</b> — создание и преобразование признаков. Часто даёт больше прироста, чем смена модели.`,
+  `Категории: <b>one-hot</b> (столбец 0/1 на каждое значение) для линейных моделей; <b>ordinal</b> для упорядоченных; <b>target encoding</b> (среднее таргета по категории) — мощно, но считать только на train, иначе утечка.`,
+  `Числа: <b>масштабирование</b> (StandardScaler, MinMaxScaler) для линейных моделей, KNN, SVM и нейросетей; <b>логарифм</b> для длинных хвостов; биннинг. Деревьям масштаб не важен.`,
+  `Новые признаки: из дат (день недели, месяц, праздник), отношения и разности (цена за м²), агрегаты по группам, длины текстов. Пропуски заполняют и часто добавляют флаг «было пустым».`
+], [
+  [`Что такое one-hot encoding?`, `Отдельный бинарный столбец для каждого значения категории.`],
+  [`Чем опасен target encoding?`, `Утечкой таргета, если считать его не только на train.`],
+  [`Каким моделям не нужно масштабирование?`, `Деревьям и их ансамблям.`],
+  [`Зачем логарифмировать признак?`, `Сжать длинный правый хвост и ослабить влияние выбросов.`],
+  [`Какие признаки можно извлечь из даты?`, `День недели, месяц, час, выходной или праздник, сезон.`]
+], [
+  [`Категория «город» с 5000 значений. One-hot создаст…`, [`1 столбец`, `5000 столбцов`, `Ошибку`], 1, `По столбцу на каждое значение, поэтому при высокой кардинальности ищут другие кодировки.`],
+  [`StandardScaler обучили на всех данных до разбиения. Проблема?`, [`Нет`, `Небольшая утечка из теста`, `Модель не обучится`], 1, `Статистики теста попали в предобработку. Делай fit только на train.`],
+  [`Какой признак подойдёт для предсказания цены квартиры?`, [`Цена за м² этой же квартиры`, `Площадь на комнату`, `ID объявления`], 1, `Цена за м² — утечка, ID бессмысленен.`]
+]),
+
+T(`pipeline`, `Pipeline и MLflow`, [
+  `<b>Pipeline</b> в scikit-learn объединяет предобработку и модель в один объект. <code>fit</code> обучает все шаги только на train, <code>predict</code> применяет их к новым данным — это защищает от утечек.`,
+  C(`pre = ColumnTransformer([
+    ("num", StandardScaler(), num_cols),
+    ("cat", OneHotEncoder(handle_unknown="ignore"), cat_cols)])
+pipe = Pipeline([("pre", pre), ("model", LogisticRegression())])
+cross_val_score(pipe, X, y, cv=5)`),
+  `<b>Кросс-валидация</b> (k-fold) делит данные на k частей и k раз обучает модель, каждый раз оставляя одну часть для проверки. Оценка надёжнее, чем при одном разбиении. Гиперпараметры подбирают через <code>GridSearchCV</code>.`,
+  `<b>MLflow</b> записывает эксперименты: параметры, метрики, артефакты и саму модель (<code>mlflow.log_param</code>, <code>log_metric</code>, <code>mlflow.sklearn.log_model</code>). В интерфейсе сравнивают запуски, а Model Registry хранит версии моделей.`
+], [
+  [`Зачем нужен sklearn Pipeline?`, `Объединить предобработку и модель, обучать всё только на train и избежать утечек.`],
+  [`Что делает ColumnTransformer?`, `Применяет разные преобразования к разным столбцам.`],
+  [`Как работает k-fold кросс-валидация?`, `k раз обучаем на k−1 частях и проверяем на оставшейся, метрики усредняем.`],
+  [`Что логирует MLflow?`, `Параметры, метрики, артефакты и модели экспериментов.`],
+  [`Что такое Model Registry?`, `Хранилище версий моделей со стадиями вроде staging и production.`]
+], [
+  [`Зачем OneHotEncoder(handle_unknown="ignore")?`, [`Ускорить обучение`, `Не падать на новых категориях в проде`, `Удалить пропуски`], 1, `Неизвестная категория даст нули вместо ошибки.`],
+  [`5-fold CV: сколько раз обучается модель?`, [`1`, `5`, `10`], 1, `По разу на каждый фолд.`],
+  [`Где сравнить метрики десятков запусков?`, [`В MLflow UI`, `В requirements.txt`, `В Docker`], 0, `MLflow хранит и сравнивает эксперименты.`]
+])
+];
+
+/* ===== Модуль 4 (новые темы) ===== */
+const M4_NEW = [
+T(`pytorch`, `PyTorch: тензоры, autograd, DataLoader`, [
+  `<b>Тензор</b> — многомерный массив, как в NumPy, но умеет считаться на GPU (<code>x.to("cuda")</code>) и запоминать операции для градиентов.`,
+  `<b>Autograd</b>: если у тензора <code>requires_grad=True</code>, PyTorch строит граф вычислений; <code>loss.backward()</code> считает градиенты и кладёт их в <code>.grad</code>.`,
+  `<b>Dataset</b> отдаёт один пример по индексу (<code>__len__</code>, <code>__getitem__</code>), <b>DataLoader</b> собирает примеры в батчи, перемешивает и грузит параллельно.`,
+  C(`for X, y in loader:
+    optimizer.zero_grad()
+    loss = loss_fn(model(X), y)
+    loss.backward()
+    optimizer.step()`),
+  `Модель — класс-наследник <code>nn.Module</code> с методом <code>forward</code>. Для оценки включай <code>model.eval()</code> и оборачивай код в <code>torch.no_grad()</code>.`
+], [
+  [`Чем тензор PyTorch отличается от массива NumPy?`, `Может считаться на GPU и отслеживать операции для автоматических градиентов.`],
+  [`Что делает loss.backward()?`, `Считает градиенты потерь по всем параметрам с requires_grad.`],
+  [`Зачем optimizer.zero_grad()?`, `Градиенты накапливаются, и их нужно обнулять перед каждым шагом.`],
+  [`Роли Dataset и DataLoader?`, `Dataset отдаёт отдельные примеры, DataLoader собирает батчи, перемешивает и грузит параллельно.`],
+  [`Что дают model.eval() и torch.no_grad()?`, `Режим инференса для dropout и batchnorm и отключение подсчёта градиентов.`]
+], [
+  [`Забыли optimizer.zero_grad(). Что будет?`, [`Ничего`, `Градиенты суммируются между шагами`, `Ошибка`], 1, `Градиенты накапливаются, шаги становятся неверными.`],
+  [`Какой метод обязательно реализовать в nn.Module?`, [`forward`, `backward`, `fit`], 0, `backward PyTorch выводит сам.`],
+  [`Что делает shuffle=True в DataLoader?`, [`Перемешивает примеры каждую эпоху`, `Перемешивает признаки`, `Ускоряет GPU`], 0, `Порядок примеров меняется каждую эпоху.`]
+]),
+
+T(`cnn-cv`, `CNN и transfer learning`, [
+  `<b>Свёрточный слой</b> скользит маленьким фильтром (например 3×3) по изображению и ищет локальные паттерны: края, текстуры. Веса фильтра общие для всех позиций, поэтому параметров гораздо меньше, чем в полносвязном слое.`,
+  `<b>Pooling</b> (max pooling) уменьшает размер карты признаков. С глубиной фильтры распознают всё более сложное: края → формы → части объектов.`,
+  `<b>Transfer learning</b>: берём сеть, обученную на ImageNet (<b>ResNet</b>, <b>EfficientNet</b>), меняем последний слой под свои классы и дообучаем. Работает даже с сотнями картинок.`,
+  `Два режима: <b>feature extraction</b> — замораживаем все слои и учим только голову; <b>fine-tuning</b> — размораживаем верхние слои и учим с маленьким learning rate. Аугментации (повороты, отражения, кропы) помогают против переобучения.`
+], [
+  [`Почему у свёрточного слоя мало параметров?`, `Один и тот же фильтр применяется во всех позициях (разделение весов).`],
+  [`Что делает max pooling?`, `Уменьшает карту признаков, беря максимум в каждом окне.`],
+  [`Что такое transfer learning?`, `Использование модели, обученной на большой задаче, как стартовой точки для своей.`],
+  [`Feature extraction или fine-tuning при 200 картинках?`, `Обычно feature extraction: заморозить основу и учить голову.`],
+  [`Чем известен ResNet?`, `Остаточными связями (skip connections), которые позволяют обучать очень глубокие сети.`]
+], [
+  [`При fine-tuning learning rate для предобученных слоёв делают…`, [`Больше`, `Меньше`, `Как при обучении с нуля`], 1, `Маленький шаг не разрушает полезные веса.`],
+  [`Что заменить в ResNet для задачи с 5 классами?`, [`Первый слой`, `Последний полносвязный слой`, `Все свёртки`], 1, `Голова должна выдавать 5 классов.`],
+  [`Что распознают ранние слои CNN?`, [`Целые объекты`, `Края и простые текстуры`, `Классы`], 1, `Сложность признаков растёт с глубиной.`]
+]),
+
+T(`hf`, `BERT, GPT и HuggingFace`, [
+  `<b>BERT</b> — энкодер: видит текст в обе стороны, обучен угадывать замаскированные слова (MLM). Хорош для понимания: классификация, NER, поиск.`,
+  `<b>GPT</b> — декодер: видит только предыдущие токены, обучен предсказывать следующий. Хорош для генерации. <b>T5</b> и BART — энкодер-декодеры для перевода и суммаризации.`,
+  `<b>HuggingFace</b> — хаб моделей и библиотека <code>transformers</code>. Самый быстрый старт — <code>pipeline</code>:`,
+  C(`from transformers import pipeline
+clf = pipeline("sentiment-analysis")
+clf("I love this course!")
+# [{'label': 'POSITIVE', 'score': 0.99}]`),
+  `Для своей задачи: <code>AutoTokenizer</code> + <code>AutoModelForSequenceClassification</code> и <code>Trainer</code>. Токенизатор обязательно тот же, с которым обучали модель.`
+], [
+  [`Чем BERT отличается от GPT?`, `BERT — двунаправленный энкодер для понимания текста, GPT — авторегрессионный декодер для генерации.`],
+  [`На какой задаче предобучен BERT?`, `Masked language modeling: угадывать замаскированные токены.`],
+  [`Что такое pipeline в HuggingFace?`, `Готовая обёртка «текст на входе — ответ на выходе» для типовых задач.`],
+  [`Почему токенизатор должен совпадать с моделью?`, `Модель знает только свой словарь токенов и их номера.`],
+  [`Какая архитектура у T5?`, `Энкодер-декодер.`]
+], [
+  [`Классификация отзывов по тональности: что взять за основу?`, [`BERT-подобный энкодер`, `Только генератор`, `CNN для картинок`], 0, `Для понимания текста хороши энкодеры.`],
+  [`Какая модель видит только левый контекст?`, [`BERT`, `GPT`], 1, `GPT авторегрессионная.`],
+  [`Какой класс загрузит модель для классификации текста?`, [`AutoModelForSequenceClassification`, `AutoTokenizer`, `pipeline("translation")`], 0, `Это модель с головой классификации.`]
+]),
+
+T(`lora`, `Fine-tuning LLM: LoRA, QLoRA, PEFT`, [
+  `Полный fine-tuning большой модели обновляет миллиарды весов и требует много GPU-памяти. <b>PEFT</b> (parameter-efficient fine-tuning) учит лишь малую долю параметров.`,
+  `<b>LoRA</b>: исходные веса W замораживаются, а изменение записывается произведением двух маленьких матриц: <code>W + B·A</code> с рангом r (например 8 или 16), намного меньше размерности. Обычно учится меньше 1% параметров.`,
+  `<b>QLoRA</b>: базовую модель дополнительно квантуют до 4 бит, а LoRA-адаптеры учат поверх. Так модель на 7B параметров дообучается на одной потребительской видеокарте.`,
+  `Библиотека <code>peft</code>: <code>LoraConfig(r=8, lora_alpha=16, target_modules=[...])</code>. Адаптер весит мегабайты и подключается к базовой модели; под разные задачи можно хранить разные адаптеры.`
+], [
+  [`Что такое PEFT?`, `Методы дообучения, которые обновляют лишь малую часть параметров модели.`],
+  [`Идея LoRA?`, `Заморозить W и учить низкоранговую поправку B·A.`],
+  [`Чем QLoRA отличается от LoRA?`, `Базовая модель квантуется до 4 бит, что сильно экономит память.`],
+  [`Что означает r в LoRA?`, `Ранг адаптерных матриц: чем больше, тем больше обучаемых параметров.`],
+  [`Почему адаптеры удобно хранить?`, `Они весят мегабайты и подключаются к одной базовой модели.`]
+], [
+  [`Матрица 4096×4096, LoRA с r = 8. Сколько параметров в адаптере?`, [`≈ 16.7 млн`, `≈ 65 тыс.`, `≈ 4 тыс.`], 1, `B: 4096×8 и A: 8×4096, всего 2·4096·8 = 65 536.`],
+  [`Что заморожено при LoRA?`, [`Адаптер`, `Исходные веса модели`, `Ничего`], 1, `Учатся только A и B.`],
+  [`Главная выгода QLoRA?`, [`Точнее LoRA`, `Влезает в меньшую GPU-память`, `Не нужны данные`], 1, `4-битная база экономит память.`]
+])
+];
+
+/* ===== Модуль 5. AI-приложения: чатботы и RAG ===== */
+const M5 = [
+T(`llmapi`, `LLM API и контекст`, [
+  `С LLM через API работают так: отправляешь список <b>сообщений</b> (system, user, assistant) и получаешь ответ. Основные параметры: модель, <code>max_tokens</code>, <code>temperature</code> (0 — стабильно, выше — разнообразнее).`,
+  C(`from anthropic import Anthropic
+client = Anthropic()            # ключ из переменной ANTHROPIC_API_KEY
+msg = client.messages.create(
+    model="claude-sonnet-...", max_tokens=500,
+    system="Ты помощник аналитика.",
+    messages=[{"role": "user", "content": "Объясни p-value"}])
+print(msg.content[0].text)`),
+  `Модель не помнит прошлые запросы: историю чата нужно каждый раз отправлять заново. <b>Контекстное окно</b> ограничено в токенах, поэтому длинную историю обрезают или суммаризируют. Платишь тоже за токены.`,
+  `<b>Цепочки промптов</b>: сложную задачу разбивают на шаги (извлечь → проанализировать → оформить), выход одного вызова становится входом следующего. API-ключи хранят в переменных окружения, не в коде.`
+], [
+  [`Какие роли сообщений есть в чат-API?`, `system, user и assistant.`],
+  [`Что делает temperature?`, `Управляет случайностью: 0 — стабильные ответы, выше — разнообразнее.`],
+  [`Помнит ли модель прошлые запросы через API?`, `Нет, историю нужно отправлять в каждом запросе.`],
+  [`Что такое контекстное окно?`, `Максимум токенов, которые модель обрабатывает за один запрос.`],
+  [`Что такое цепочка промптов?`, `Последовательность вызовов, где выход одного — вход следующего.`]
+], [
+  [`Нужно одинаково извлекать JSON из писем. Какая temperature?`, [`0`, `1`, `2`], 0, `Низкая температура даёт предсказуемый результат.`],
+  [`Чат забывает, о чём говорили. Вероятная причина?`, [`Не передаётся история сообщений`, `Мало max_tokens`, `Высокая temperature`], 0, `API не хранит состояние, историю отправляет клиент.`],
+  [`Где хранить API-ключ?`, [`В коде на GitHub`, `В переменной окружения`, `В промпте`], 1, `Ключ не должен попадать в репозиторий.`]
+]),
+
+T(`ui`, `Streamlit и Gradio`, [
+  `<b>Streamlit</b> превращает Python-скрипт в веб-приложение. При каждом действии пользователя скрипт перезапускается сверху вниз, а виджеты возвращают значения.`,
+  C(`import streamlit as st
+q = st.text_input("Вопрос")
+if st.button("Спросить"):
+    st.write(ask_llm(q))
+# запуск: streamlit run app.py`),
+  `Состояние между перезапусками хранят в <code>st.session_state</code> (например историю чата), тяжёлые загрузки кэшируют через <code>@st.cache_resource</code>. Для чатов есть <code>st.chat_input</code> и <code>st.chat_message</code>.`,
+  `<b>Gradio</b> строит интерфейс вокруг функции: <code>gr.Interface(fn, inputs, outputs)</code> или <code>gr.ChatInterface</code>. Отлично подходит для демо моделей и легко публикуется на HuggingFace Spaces.`
+], [
+  [`Как Streamlit обрабатывает действие пользователя?`, `Перезапускает весь скрипт сверху вниз.`],
+  [`Где хранить историю чата в Streamlit?`, `В st.session_state.`],
+  [`Зачем @st.cache_resource?`, `Чтобы не загружать модель или подключение заново при каждом перезапуске.`],
+  [`Как Gradio строит интерфейс?`, `Вокруг Python-функции: задаёшь входы и выходы.`],
+  [`Как запустить Streamlit-приложение?`, `streamlit run app.py`]
+], [
+  [`Модель грузится 20 секунд при каждом клике. Что исправить?`, [`Обернуть загрузку в @st.cache_resource`, `Добавить st.button`, `Перейти на Flask`], 0, `Кэш сохраняет объект между перезапусками.`],
+  [`Список сообщений в Streamlit-чате всё время обнуляется. Почему?`, [`Баг Streamlit`, `Скрипт перезапускается целиком`, `Нет интернета`], 1, `Храни историю в st.session_state.`],
+  [`Где проще всего бесплатно показать Gradio-демо?`, [`HuggingFace Spaces`, `Excel`, `Docker Hub`], 0, `Spaces поддерживает Gradio из коробки.`]
+]),
+
+T(`vecdb`, `Эмбеддинги и векторные БД`, [
+  `<b>Эмбеддинг</b> текста — вектор (например из 768 или 1536 чисел), в котором похожие по смыслу тексты оказываются рядом. Близость обычно меряют <b>косинусным сходством</b>.`,
+  `<b>Векторная БД</b> хранит векторы с метаданными и быстро ищет ближайших соседей (ANN-индексы, например HNSW). Примеры: <b>Chroma</b> (локально и просто), <b>Pinecone</b> (облачный сервис), <b>Weaviate</b>, а также pgvector в Postgres.`,
+  `<b>Chunking</b>: документы режут на куски, потому что эмбеддинг целой книги размывает смысл. Типично 300–1000 токенов с перекрытием 10–20%, лучше по смысловым границам (абзацы, заголовки).`,
+  `Для запросов и документов используй одну и ту же модель эмбеддингов. Метаданные (источник, дата) позволяют фильтровать результаты.`
+], [
+  [`Что такое эмбеддинг текста?`, `Числовой вектор, в котором близкие по смыслу тексты оказываются рядом.`],
+  [`Чем меряют близость эмбеддингов?`, `Обычно косинусным сходством.`],
+  [`Зачем chunking?`, `Эмбеддинг длинного текста размывает смысл; небольшие куски точнее находятся поиском.`],
+  [`Зачем перекрытие чанков?`, `Чтобы мысль на границе не потерялась между кусками.`],
+  [`Назови три векторные БД.`, `Chroma, Pinecone, Weaviate.`]
+], [
+  [`Косинусное сходство двух сонаправленных векторов?`, [`0`, `1`, `−1`], 1, `Угол 0, косинус равен 1.`],
+  [`Документы индексировали одной моделью эмбеддингов, запросы — другой. Что будет?`, [`Всё нормально`, `Поиск сломается`, `Станет быстрее`], 1, `Векторы разных моделей несопоставимы.`],
+  [`Какая БД запускается локально в пару строк Python?`, [`Chroma`, `Pinecone`], 0, `Pinecone — облачный сервис.`]
+]),
+
+T(`rag`, `RAG-архитектура`, [
+  `<b>RAG</b> (retrieval-augmented generation): перед ответом система находит релевантные куски документов и подставляет их в промпт. Модель отвечает по твоим данным и может ссылаться на источники.`,
+  `Два этапа. <b>Индексация</b>: загрузить документы → разрезать на чанки → посчитать эмбеддинги → сохранить в векторную БД. <b>Запрос</b>: эмбеддинг вопроса → поиск top-k чанков → промпт «ответь по контексту» → LLM.`,
+  `Улучшения: <b>гибридный поиск</b> (векторы + BM25 по словам), <b>reranker</b> для пересортировки найденного, переформулировка запроса, фильтры по метаданным.`,
+  `<b>LangChain</b> и <b>LlamaIndex</b> дают готовые блоки: загрузчики документов, сплиттеры, ретриверы, цепочки. Качество оценивай отдельно для поиска (нашлось ли нужное) и для ответа (верен ли он и опирается ли на контекст).`
+], [
+  [`Что такое RAG?`, `Генерация ответа с подстановкой в промпт найденных фрагментов документов.`],
+  [`Этапы индексации в RAG?`, `Загрузка → chunking → эмбеддинги → запись в векторную БД.`],
+  [`Что делает reranker?`, `Пересортировывает найденные чанки более точной моделью.`],
+  [`Что такое гибридный поиск?`, `Сочетание векторного поиска и поиска по ключевым словам (BM25).`],
+  [`Зачем оценивать поиск отдельно от ответа?`, `Чтобы понять, где ошибка: не нашли нужное или неверно ответили по найденному.`]
+], [
+  [`Бот ответил неверно, а в найденных чанках нужного факта нет. Где проблема?`, [`В генерации`, `В поиске (retrieval)`, `В temperature`], 1, `LLM не ответит по тому, чего нет в контексте.`],
+  [`Пользователи ищут по артикулам вроде «XJ-2041». Что добавить?`, [`Гибридный поиск с BM25`, `Повысить temperature`, `Уменьшить число чанков`], 0, `Точные коды лучше ловит лексический поиск.`],
+  [`Главное преимущество RAG перед fine-tuning для базы знаний?`, [`Данные легко обновлять без переобучения`, `Ответы быстрее`, `Не нужны эмбеддинги`], 0, `Достаточно переиндексировать документы.`]
+]),
+
+T(`agents`, `Агенты и function calling`, [
+  `<b>Function calling</b> (tool use): ты описываешь модели инструменты — имя, описание, JSON-схему параметров. Модель не выполняет их сама, а возвращает запрос вроде <code>get_weather(city="Almaty")</code>; твой код выполняет функцию и отправляет результат обратно.`,
+  `<b>Агент</b> — это цикл: модель рассуждает, вызывает инструмент, получает результат и решает, что делать дальше, пока задача не решена.`,
+  `<b>ReAct</b> (Reason + Act) чередует рассуждения и действия: Thought → Action → Observation → … Это помогает модели планировать и исправляться по ходу.`,
+  `Практика: ограничивай число шагов, проверяй аргументы, логируй все вызовы, давай инструментам понятные описания, а опасные действия (оплата, удаление) подтверждай у человека.`
+], [
+  [`Кто выполняет функцию при function calling?`, `Твой код; модель только просит вызвать её с аргументами.`],
+  [`Из чего состоит описание инструмента?`, `Имя, описание и JSON-схема параметров.`],
+  [`Что такое агент?`, `Цикл, в котором модель многократно вызывает инструменты и решает, что делать дальше.`],
+  [`Что значит ReAct?`, `Reason + Act: чередование рассуждений, действий и наблюдений.`],
+  [`Как защитить агента от бесконечного цикла?`, `Ограничить максимальное число шагов.`]
+], [
+  [`Модель вернула вызов инструмента с аргументами. Что дальше?`, [`Показать пользователю`, `Выполнить функцию и вернуть результат модели`, `Повторить запрос`], 1, `Результат инструмента отправляется обратно в диалог.`],
+  [`Что в ReAct идёт после Action?`, [`Thought`, `Observation`, `Answer`], 1, `Observation — результат действия.`],
+  [`Агент может переводить деньги. Что обязательно?`, [`Подтверждение человеком`, `Высокая temperature`, `Больше инструментов`], 0, `Необратимые действия должен подтверждать человек.`]
+])
+];
+
+/* ===== Модуль 6. MLOps и деплой ===== */
+const M6 = [
+T(`fastapi`, `FastAPI для ML-сервисов`, [
+  `<b>FastAPI</b> — быстрый веб-фреймворк на Python. Схемы запросов и ответов описываются через <b>Pydantic</b>, а валидация и документация (<code>/docs</code>) получаются автоматически.`,
+  C(`app = FastAPI()
+model = joblib.load("model.pkl")   # один раз при старте
+
+class Item(BaseModel):
+    area: float
+    rooms: int
+
+@app.post("/predict")
+def predict(item: Item):
+    return {"price": float(model.predict([[item.area, item.rooms]])[0])}`),
+  `Запуск: <code>uvicorn main:app --reload</code>. Модель загружай один раз при старте, а не в каждом запросе.`,
+  `Добавь эндпоинт <code>/health</code> для проверки живости, логируй входы и задержки, возвращай версию модели в ответе. Тяжёлые вычисления выноси в фон или очередь.`
+], [
+  [`Зачем Pydantic в FastAPI?`, `Описывать схемы данных и автоматически валидировать запросы.`],
+  [`Где посмотреть автодокументацию FastAPI?`, `По адресу /docs (Swagger UI).`],
+  [`Чем запускают FastAPI-приложение?`, `uvicorn main:app`],
+  [`Где загружать модель в сервисе?`, `Один раз при старте приложения.`],
+  [`Зачем эндпоинт /health?`, `Чтобы платформа и мониторинг проверяли, что сервис жив.`]
+], [
+  [`Клиент прислал rooms: "три". Что сделает FastAPI?`, [`Упадёт с 500`, `Вернёт 422 с описанием ошибки`, `Подставит 0`], 1, `Pydantic валидирует вход и отвечает 422.`],
+  [`Сервис отвечает 3 секунды, хотя модель считает 10 мс. Вероятная причина?`, [`Модель грузится в каждом запросе`, `Pydantic медленный`, `Мало эндпоинтов`], 0, `Загрузку переносят на старт.`],
+  [`Какой HTTP-метод обычно у /predict?`, [`GET`, `POST`, `DELETE`], 1, `Данные передаются в теле запроса.`]
+]),
+
+T(`docker`, `Docker`, [
+  `<b>Docker</b> упаковывает приложение со всеми зависимостями в <b>образ</b>; запущенный образ — <b>контейнер</b>. Это решает проблему «у меня работает, а на сервере нет».`,
+  C(`FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]`),
+  `Команды: <code>docker build -t ml-api .</code> и <code>docker run -p 8000:8000 ml-api</code>. Флаг <code>-p</code> пробрасывает порт контейнера наружу.`,
+  `Порядок слоёв важен: сначала копируй requirements и ставь пакеты, потом код — тогда при изменении кода слой с пакетами берётся из кэша. Лишнее исключай через <code>.dockerignore</code>, несколько сервисов поднимай через <code>docker compose</code>.`
+], [
+  [`Чем образ отличается от контейнера?`, `Образ — шаблон, контейнер — запущенный экземпляр образа.`],
+  [`Зачем копировать requirements.txt до кода?`, `Чтобы слой с установкой пакетов кэшировался при изменениях кода.`],
+  [`Что делает -p 8000:8000?`, `Пробрасывает порт 8000 контейнера на порт 8000 хоста.`],
+  [`Зачем .dockerignore?`, `Чтобы не тащить в образ лишнее: .venv, данные, .git.`],
+  [`Для чего docker compose?`, `Запускать несколько связанных контейнеров одной командой.`]
+], [
+  [`Зачем uvicorn в контейнере запускают с --host 0.0.0.0?`, [`Так быстрее`, `Чтобы принимать подключения извне контейнера`, `Так требует Python`], 1, `127.0.0.1 доступен только внутри контейнера.`],
+  [`Каждая сборка заново ставит пакеты, хотя менялся только код. Причина?`, [`COPY . . стоит до pip install`, `Нет CMD`, `slim-образ`], 0, `Изменение кода сбрасывает кэш всех следующих слоёв.`],
+  [`Какая команда собирает образ?`, [`docker run`, `docker build`, `docker pull`], 1, `build создаёт образ по Dockerfile.`]
+]),
+
+T(`cicd`, `GitHub Actions CI/CD`, [
+  `<b>CI</b> (continuous integration): при каждом push или pull request автоматически запускаются линтер и тесты. <b>CD</b> (continuous delivery/deployment): после успешных проверок приложение собирается и выкатывается.`,
+  `<b>GitHub Actions</b> описывает это в YAML-файлах в <code>.github/workflows/</code>: событие (<code>on: push</code>), задачи (jobs) и шаги (steps).`,
+  C(`on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install -r requirements.txt
+      - run: pytest`),
+  `Для ML в CI добавляют проверки данных и минимального качества модели. Секреты (токены деплоя) хранят в GitHub Secrets и читают как <code>\${{ secrets.NAME }}</code>.`
+], [
+  [`Чем CI отличается от CD?`, `CI автоматически проверяет код при изменениях, CD автоматически собирает и выкатывает.`],
+  [`Где лежат workflow GitHub Actions?`, `В папке .github/workflows/ в виде YAML-файлов.`],
+  [`Как хранить токены для деплоя в Actions?`, `В GitHub Secrets.`],
+  [`Из чего состоит workflow?`, `Событие-триггер, jobs и steps.`],
+  [`Какие ML-проверки можно добавить в CI?`, `Валидацию данных и порог минимального качества модели.`]
+], [
+  [`Что делает actions/checkout?`, [`Скачивает код репозитория в раннер`, `Деплоит`, `Ставит Python`], 0, `Без него в раннере нет твоего кода.`],
+  [`Тесты в PR упали. Что будет с деплоем при правильной настройке?`, [`Выкатится`, `Не выкатится`, `Выкатится частично`], 1, `CD запускается только после зелёного CI.`],
+  [`Как сослаться на секрет DEPLOY_TOKEN?`, [`$DEPLOY_TOKEN в коде`, `\${{ secrets.DEPLOY_TOKEN }}`, `Вписать значение в YAML`], 1, `Это синтаксис выражений GitHub Actions.`]
+]),
+
+T(`deploy`, `Деплой в облако`, [
+  `<b>HuggingFace Spaces</b> — бесплатный хостинг демо на Gradio, Streamlit или Docker. Достаточно запушить код в репозиторий Space.`,
+  `<b>Railway</b> (и похожие Render, Fly.io) — PaaS: подключаешь GitHub-репозиторий с Dockerfile, платформа сама собирает и выдаёт URL. Переменные окружения задаются в панели.`,
+  `<b>GCP</b>: <b>Cloud Run</b> запускает контейнер и масштабирует его от нуля по запросам; Vertex AI — управляемый ML-хостинг; Compute Engine — обычные виртуальные машины.`,
+  `Чек-лист: секреты в переменных окружения, порт из переменной <code>PORT</code>, health-check, логи, лимит памяти под размер модели, учёт холодного старта при масштабировании от нуля.`
+], [
+  [`Что такое HuggingFace Spaces?`, `Бесплатный хостинг демо на Gradio, Streamlit или Docker.`],
+  [`Что такое Cloud Run?`, `Сервис GCP, который запускает контейнеры и масштабирует их от нуля.`],
+  [`Что такое холодный старт?`, `Задержка первого запроса, пока поднимается новый экземпляр.`],
+  [`Откуда брать порт на PaaS?`, `Из переменной окружения PORT.`],
+  [`Где хранить секреты при деплое?`, `В переменных окружения сервиса, не в коде.`]
+], [
+  [`Как быстрее всего бесплатно показать Gradio-демо?`, [`HuggingFace Spaces`, `Compute Engine`, `Свой сервер`], 0, `Spaces создан для этого.`],
+  [`Первый запрос к Cloud Run занял 8 с, следующие — 100 мс. Почему?`, [`Холодный старт`, `Утечка памяти`, `Плохая модель`], 0, `Экземпляр поднимался с нуля.`],
+  [`Сервис на Railway не отвечает, слушая порт 8000. Что проверить?`, [`Читает ли он переменную PORT`, `Версию pandas`, `Цвет кнопок`], 0, `Платформа сама задаёт порт.`]
+]),
+
+T(`monitor`, `Мониторинг и data drift`, [
+  `После деплоя модель может незаметно деградировать. Мониторят три уровня: <b>сервис</b> (задержка, ошибки, число запросов), <b>данные</b> (распределения входов) и <b>качество</b> (метрики по мере появления истинных ответов).`,
+  `<b>Prometheus</b> собирает метрики сервисов (сервис отдаёт их на <code>/metrics</code>), <b>Grafana</b> рисует дашборды и отправляет алерты.`,
+  `<b>Data drift</b> — распределение входных данных изменилось по сравнению с обучением (новая аудитория, сезон). <b>Concept drift</b> — изменилась сама связь признаков и ответа. Дрейф ловят тестами (KS, χ²) и метрикой PSI; удобно делать это инструментами вроде Evidently.`,
+  `Реакция: алерт → разбор → переобучение на свежих данных. Логируй входы и предсказания, чтобы было на чём разбираться.`
+], [
+  [`Что такое data drift?`, `Изменение распределения входных данных относительно обучающих.`],
+  [`Чем concept drift отличается от data drift?`, `Меняется сама зависимость между признаками и целевой переменной.`],
+  [`Роли Prometheus и Grafana?`, `Prometheus собирает и хранит метрики, Grafana показывает их и шлёт алерты.`],
+  [`Какие метрики сервиса мониторить?`, `Задержку, долю ошибок, число запросов.`],
+  [`Чем ловить дрейф признака?`, `Тестом KS, χ² или метрикой PSI.`]
+], [
+  [`Скоринговая модель стала хуже, хотя распределения входов прежние. Что вероятнее?`, [`Data drift`, `Concept drift`, `Проблема с Docker`], 1, `Входы те же, изменилась связь с исходом.`],
+  [`Откуда Prometheus забирает метрики сервиса?`, [`С /metrics`, `С /docs`, `Из Grafana`], 0, `Prometheus опрашивает эндпоинт /metrics.`],
+  [`Что делать при подтверждённом дрейфе?`, [`Игнорировать`, `Переобучить на свежих данных`, `Удалить логи`], 1, `Модель нужно обновить под новые данные.`]
+])
+];
+
+/* ===== Курс Deep Learning (по неделям) ===== */
+const DL_A = [
+T(`w1`, `Введение и математика`, [
+  `<b>Deep learning</b> — обучение многослойных нейросетей, которые сами извлекают признаки из сырых данных (пикселей, текста) вместо ручного feature engineering.`,
+  `Линейная алгебра: данные — векторы и матрицы. Слой сети — это <code>y = Wx + b</code>. Если W имеет форму (m, n), то x длины n, а y длины m. Скалярное произведение измеряет, насколько векторы похожи.`,
+  `Анализ: <b>производная</b> показывает скорость изменения функции. Частные производные по всем параметрам образуют <b>градиент</b>. Пригодится: <code>(x²)' = 2x</code>, <code>(eˣ)' = eˣ</code>, <code>(ln x)' = 1/x</code>.`,
+  `Вероятность: выход классификатора — распределение вероятностей, а потери вроде кросс-энтропии выводятся из метода максимального правдоподобия.`
+], [
+  [`Чем deep learning отличается от классического ML?`, `Сеть сама извлекает признаки из сырых данных, без ручного feature engineering.`],
+  [`W формы (64, 128), x длины 128. Какая длина у Wx?`, `64.`],
+  [`Что показывает производная?`, `Скорость изменения функции при малом изменении аргумента.`],
+  [`Что такое градиент?`, `Вектор частных производных функции по всем параметрам.`],
+  [`Производная ln x?`, `1/x`]
+], [
+  [`Произведение матриц (32, 10) и (10, 5) имеет форму…`, [`(32, 5)`, `(10, 10)`, `Не определено`], 0, `Внутренние размерности совпадают, остаются внешние.`],
+  [`f(x) = 3x². f'(2) = ?`, [`6`, `12`, `24`], 1, `f'(x) = 6x, значит 12.`],
+  [`Сколько параметров у слоя Wx + b, где W формы (100, 50)?`, [`5000`, `5100`, `5050`], 1, `5000 весов + 100 смещений.`]
+]),
+
+T(`w2`, `Перцептрон и backpropagation`, [
+  `<b>Перцептрон</b> Розенблатта: <code>ŷ = step(w·x + b)</code>. Правило обучения при ошибке: <code>w ← w + η(y − ŷ)x</code>. Он находит разделяющую прямую, только если классы <b>линейно разделимы</b>; XOR одним перцептроном не решить.`,
+  `<b>Цепное правило</b>: производная сложной функции — произведение производных звеньев. Если <code>L = f(g(w))</code>, то <code>dL/dw = f'(g(w))·g'(w)</code>.`,
+  `<b>Backpropagation</b> применяет цепное правило к графу вычислений: в прямом проходе сохраняем промежуточные значения, в обратном идём от потери к весам и перемножаем локальные градиенты.`,
+  `Пример: <code>z = wx + b</code>, <code>a = σ(z)</code>, <code>L = (a − y)²</code>. Тогда <code>dL/dw = 2(a − y)·σ(z)(1 − σ(z))·x</code>.`
+], [
+  [`Правило обучения перцептрона?`, `w ← w + η(y − ŷ)x при ошибке.`],
+  [`Почему один перцептрон не решает XOR?`, `Классы XOR нельзя разделить одной прямой.`],
+  [`Цепное правило?`, `d f(g(w)) / dw = f'(g(w))·g'(w)`],
+  [`Производная сигмоиды?`, `σ'(z) = σ(z)(1 − σ(z))`],
+  [`Зачем в прямом проходе сохраняют промежуточные значения?`, `Они нужны для локальных градиентов в обратном проходе.`]
+], [
+  [`L = (wx − y)². dL/dw = ?`, [`2(wx − y)`, `2(wx − y)·x`, `(wx − y)·x²`], 1, `Внешняя производная 2(wx − y), внутренняя x.`],
+  [`Максимальное значение σ'(z)?`, [`1`, `0.5`, `0.25`], 2, `При σ = 0.5 получаем 0.5·0.5 = 0.25.`],
+  [`Какую функцию не реализовать одним перцептроном?`, [`AND`, `OR`, `XOR`], 2, `XOR линейно неразделима.`]
+]),
+
+T(`w3`, `MLP и функции потерь`, [
+  `<b>MLP</b> — полносвязные слои с нелинейностями между ними. По <b>теореме универсальной аппроксимации</b> даже один достаточно широкий скрытый слой приближает любую непрерывную функцию; на практике глубокие сети эффективнее широких.`,
+  `Выход зависит от задачи: регрессия — линейный выход и <b>MSE</b>; бинарная классификация — сигмоида и <b>binary cross-entropy</b>; многоклассовая — softmax и <b>categorical cross-entropy</b>.`,
+  `Кросс-энтропия: <code>L = −Σ yᵢ log pᵢ</code>. Для верного класса с вероятностью p потеря равна <code>−log p</code>, поэтому уверенная ошибка наказывается очень сильно.`,
+  `Параметров у полносвязного слоя: <code>n_in · n_out + n_out</code>. В PyTorch <code>nn.CrossEntropyLoss</code> принимает логиты без softmax: softmax уже внутри.`
+], [
+  [`Что говорит теорема универсальной аппроксимации?`, `Сеть с одним достаточно широким скрытым слоем может приблизить любую непрерывную функцию.`],
+  [`Выход и потеря для многоклассовой классификации?`, `Softmax и категориальная кросс-энтропия.`],
+  [`Формула кросс-энтропии?`, `L = −Σ yᵢ log pᵢ`],
+  [`Сколько параметров у слоя 784 → 128?`, `784·128 + 128 = 100 480.`],
+  [`Что подавать в nn.CrossEntropyLoss?`, `Логиты, без softmax.`]
+], [
+  [`Модель дала верному классу p = 0.1. Потеря CE ≈ ?`, [`0.1`, `2.3`, `0.9`], 1, `−ln 0.1 ≈ 2.3.`],
+  [`Предсказание цены дома: какая потеря?`, [`MSE`, `Cross-entropy`, `Hinge`], 0, `Это регрессия.`],
+  [`Применили softmax перед nn.CrossEntropyLoss. Что не так?`, [`Ничего`, `Softmax применится дважды, обучение ухудшится`, `Будет ошибка формы`], 1, `Лосс сам делает log-softmax.`]
+]),
+
+T(`w4`, `Методы оптимизации`, [
+  `Основа — <b>SGD</b> на мини-батчах. <b>Momentum</b> добавляет инерцию: копит экспоненциальное среднее градиентов, сглаживает колебания и ускоряет движение по пологим направлениям.`,
+  `<b>Адаптивные</b> методы подбирают шаг для каждого параметра: <b>AdaGrad</b>; <b>RMSProp</b> (делит на корень из среднего квадратов градиентов); <b>Adam</b> = momentum + RMSProp с поправкой смещения. <b>AdamW</b> правильно применяет weight decay.`,
+  `<b>Расписания learning rate</b>: step decay, cosine annealing, warmup в начале обучения. Частый рецепт: warmup, затем плавное снижение.`,
+  `Также важны <b>инициализация весов</b> (Xavier для tanh и сигмоиды, He для ReLU), размер батча и нормализация входов. Типичные проблемы — затухание и взрыв градиентов; от взрыва спасает gradient clipping.`
+], [
+  [`Что делает momentum?`, `Накапливает среднее прошлых градиентов, сглаживая колебания и ускоряя спуск.`],
+  [`Из чего состоит Adam?`, `Momentum + адаптивный шаг как в RMSProp, с поправкой смещения.`],
+  [`Зачем warmup?`, `Начинать с маленького learning rate, пока статистики оптимизатора нестабильны.`],
+  [`Какая инициализация для ReLU?`, `He (Kaiming).`],
+  [`Что такое gradient clipping?`, `Ограничение нормы градиента для защиты от его взрыва.`]
+], [
+  [`Чем AdamW отличается от Adam?`, [`Weight decay отделён от адаптивного шага`, `В нём нет momentum`, `Он медленнее`], 0, `В AdamW регуляризация весов применяется напрямую.`],
+  [`Loss внезапно стал NaN. Что попробовать?`, [`Уменьшить learning rate и включить clipping`, `Увеличить learning rate`, `Убрать нормализацию`], 0, `Скорее всего, взорвались градиенты.`],
+  [`Какой метод делит шаг на корень из среднего квадратов градиентов?`, [`Momentum`, `RMSProp`, `SGD`], 1, `Это идея RMSProp.`]
+]),
+
+T(`w5`, `CNN: основы`, [
+  `Свёртка: фильтр k×k скользит по входу и в каждой позиции считает скалярное произведение. Каждый фильтр даёт одну карту признаков; у фильтра столько каналов, сколько у входа.`,
+  `Размер выхода: <code>(W − K + 2P) / S + 1</code> (с округлением вниз), где W — размер входа, K — фильтр, P — padding, S — stride. Padding «same» сохраняет размер, stride 2 уменьшает его вдвое.`,
+  `Параметров у свёрточного слоя: <code>(K·K·C_in + 1)·C_out</code>. Например, 3×3, 3 → 64 канала: (27 + 1)·64 = 1792.`,
+  `<b>Pooling</b> (max или average) уменьшает размер без обучаемых параметров. <b>Рецептивное поле</b> растёт с глубиной: нейроны глубоких слоёв «видят» большую часть картинки. Классические сети: LeNet, AlexNet, VGG.`
+], [
+  [`Формула размера выхода свёртки?`, `(W − K + 2P) / S + 1`],
+  [`Число параметров свёрточного слоя?`, `(K·K·C_in + 1)·C_out`],
+  [`Что такое stride?`, `Шаг, с которым фильтр двигается по входу.`],
+  [`Зачем padding?`, `Сохранить пространственный размер и учесть края изображения.`],
+  [`Что такое рецептивное поле?`, `Область входного изображения, которая влияет на конкретный нейрон.`]
+], [
+  [`Вход 32×32, фильтр 5×5, P = 0, S = 1. Размер выхода?`, [`28×28`, `32×32`, `27×27`], 0, `(32 − 5)/1 + 1 = 28.`],
+  [`Вход 224×224, фильтр 3×3, P = 1, S = 2. Размер выхода?`, [`112×112`, `224×224`, `111×111`], 0, `(224 − 3 + 2)/2 + 1 = 112.5 → 112.`],
+  [`Сколько параметров у слоя 3×3, 16 → 32 канала?`, [`4640`, `4608`, `288`], 0, `(9·16 + 1)·32 = 4640.`]
+]),
+
+T(`w6`, `Применения CNN и transfer learning`, [
+  `Задачи зрения: <b>классификация</b> (что на картинке), <b>детекция</b> (где объекты: рамки; YOLO, Faster R-CNN), <b>сегментация</b> (класс каждого пикселя; U-Net, Mask R-CNN).`,
+  `Архитектуры: <b>VGG</b> (стопки 3×3); <b>ResNet</b> (остаточные связи <code>y = F(x) + x</code> решают проблему деградации глубоких сетей); <b>Inception</b>; <b>MobileNet</b> (лёгкие depthwise-свёртки); <b>EfficientNet</b> (согласованное масштабирование глубины, ширины и разрешения).`,
+  `<b>Transfer learning</b>: предобученная на ImageNet сеть — хороший экстрактор признаков. Мало данных и похожий домен — замораживаем основу; больше данных или другой домен — размораживаем больше слоёв.`,
+  `Нормализуй вход так же, как при предобучении (средние и std ImageNet), и используй подходящий размер изображения.`
+], [
+  [`Чем детекция отличается от сегментации?`, `Детекция находит рамки объектов, сегментация размечает каждый пиксель.`],
+  [`Что такое остаточная связь в ResNet?`, `y = F(x) + x: вход блока добавляется к его выходу.`],
+  [`Чем выделяется MobileNet?`, `Лёгкими depthwise-separable свёртками для мобильных устройств.`],
+  [`Идея EfficientNet?`, `Согласованно масштабировать глубину, ширину и разрешение.`],
+  [`Мало данных, похожий домен: что делать с предобученной сетью?`, `Заморозить основу и обучить новую голову.`]
+], [
+  [`Нужно выделить опухоль на снимке попиксельно. Какая задача?`, [`Классификация`, `Детекция`, `Сегментация`], 2, `Нужна маска для каждого пикселя.`],
+  [`Зачем skip-connections в ResNet?`, [`Облегчить прохождение градиента в глубоких сетях`, `Уменьшить картинку`, `Заменить pooling`], 0, `Градиент течёт по прямой связи.`],
+  [`Предобученная модель плохо работает после дообучения. Что проверить первым?`, [`Нормализацию входа как при предобучении`, `Цвет графиков`, `Число классов ImageNet`], 0, `Несоответствие предобработки — частая ошибка.`]
+]),
+
+T(`w7`, `Метрики и регуляризация`, [
+  `Метрики классификации: accuracy, precision, recall, F1, ROC-AUC, матрица ошибок. Для многих классов — <b>macro</b> (классы поровну) и <b>weighted</b> усреднение. Для детекции — IoU и mAP.`,
+  `Регуляризация в DL: <b>weight decay</b> (L2); <b>dropout</b> (на обучении зануляет нейроны с вероятностью p, на инференсе выключен); <b>ранняя остановка</b>; <b>аугментация данных</b>; label smoothing.`,
+  `<b>Batch Normalization</b> нормализует активации по батчу, затем масштабирует обучаемыми γ и β. Ускоряет и стабилизирует обучение; на инференсе использует накопленные средние. В трансформерах обычно LayerNorm.`,
+  `Диагностика по кривым: ошибки train и val обе высокие — недообучение (больше модель, дольше учить); train низкая, val высокая — переобучение (регуляризация, больше данных).`
+], [
+  [`Как работает dropout на обучении и инференсе?`, `На обучении случайно зануляет нейроны с вероятностью p, на инференсе отключён.`],
+  [`Что делает BatchNorm?`, `Нормализует активации по батчу и масштабирует обучаемыми γ и β.`],
+  [`Чем macro-F1 отличается от weighted-F1?`, `Macro усредняет классы поровну, weighted — с учётом их размера.`],
+  [`Что такое IoU?`, `Площадь пересечения рамок, делённая на площадь их объединения.`],
+  [`Что такое label smoothing?`, `Замена жёстких меток 0/1 смягчёнными, чтобы модель не была слишком уверенной.`]
+], [
+  [`Train loss 0.05, val loss 1.2. Что делать?`, [`Усилить регуляризацию или добавить данных`, `Увеличить модель`, `Учить дольше`], 0, `Это переобучение.`],
+  [`В проде модель отвечает нестабильно, хотя на тесте всё было хорошо. Что могли забыть?`, [`model.eval()`, `optimizer.step()`, `DataLoader`], 0, `Dropout и BatchNorm остались в режиме обучения.`],
+  [`Две рамки одинаковой площади пересекаются наполовину. IoU?`, [`0.5`, `≈ 0.33`, `0.25`], 1, `Пересечение 0.5, объединение 1.5, значит 1/3.`]
+])
+];
+
+const DL_B = [
+T(`w9`, `OCR`, [
+  `<b>OCR</b> (оптическое распознавание символов) превращает изображение текста в строку. Классический конвейер: предобработка → <b>детекция текста</b> (где строки и слова) → <b>распознавание</b> → постобработка (словарь, языковая модель).`,
+  `Предобработка: оттенки серого, бинаризация (метод Оцу), выравнивание наклона, удаление шума.`,
+  `Распознавание строки — <b>CRNN</b>: CNN извлекает признаки по столбцам, BiLSTM читает их как последовательность, а <b>CTC loss</b> позволяет учиться без разметки положения каждой буквы. На каждом шаге модель выдаёт символ или «пусто», затем повторы и пустоты схлопываются.`,
+  `Инструменты: Tesseract, EasyOCR, PaddleOCR; трансформеры TrOCR и Donut; мультимодальные LLM читают документы целиком. Метрики: <b>CER</b> и <b>WER</b> — доля ошибок по символам и по словам.`
+], [
+  [`Этапы классического OCR-конвейера?`, `Предобработка → детекция текста → распознавание → постобработка.`],
+  [`Из чего состоит CRNN?`, `CNN для признаков + RNN для последовательности + CTC для обучения.`],
+  [`Зачем CTC loss?`, `Обучать распознавание без разметки позиции каждого символа.`],
+  [`Что такое CER?`, `Character error rate: доля ошибок на уровне символов.`],
+  [`Что делает бинаризация Оцу?`, `Автоматически подбирает порог, отделяющий текст от фона.`]
+], [
+  [`CTC выдала «hh-e-ll-ll-oo» («-» — пусто). Результат?`, [`hello`, `helo`, `hhelllloo`], 0, `Схлопываем повторы между пустотами: h, e, l, l, o.`],
+  [`Какая метрика естественна для OCR?`, [`CER`, `ROC-AUC`, `MSE`], 0, `Считаем ошибки в символах.`],
+  [`Зачем RNN в CRNN?`, [`Учесть контекст соседних символов`, `Найти строки на странице`, `Бинаризовать изображение`], 0, `Буквы распознаются с учётом последовательности.`]
+]),
+
+T(`w10`, `RNN и LSTM`, [
+  `<b>RNN</b> обрабатывает последовательность по шагам, передавая скрытое состояние: <code>hₜ = tanh(W·hₜ₋₁ + U·xₜ + b)</code>. Веса одни и те же на всех шагах.`,
+  `Обучение — <b>backpropagation through time</b>. На длинных последовательностях градиент многократно умножается на W и <b>затухает</b> или <b>взрывается</b>, поэтому обычная RNN плохо помнит далёкий контекст.`,
+  `<b>LSTM</b> добавляет ячейку памяти cₜ и три гейта: <b>forget</b> (что стереть), <b>input</b> (что записать), <b>output</b> (что выдать). Аддитивное обновление памяти пропускает градиент на много шагов. <b>GRU</b> — упрощённый вариант с двумя гейтами.`,
+  `Схемы: many-to-one (классификация текста), many-to-many (разметка токенов), seq2seq с энкодером и декодером (перевод). Двунаправленные RNN читают последовательность в обе стороны.`
+], [
+  [`Формула скрытого состояния RNN?`, `hₜ = tanh(W·hₜ₋₁ + U·xₜ + b)`],
+  [`Почему обычная RNN плохо помнит далёкий контекст?`, `Градиенты затухают при многократном умножении через шаги.`],
+  [`Какие гейты есть в LSTM?`, `Forget, input и output.`],
+  [`Чем GRU отличается от LSTM?`, `Два гейта вместо трёх и нет отдельной ячейки памяти; проще и быстрее.`],
+  [`Что такое BPTT?`, `Backpropagation through time: обратное распространение по развёрнутой во времени сети.`]
+], [
+  [`Какой гейт LSTM решает, что забыть?`, [`Input`, `Forget`, `Output`], 1, `Forget gate масштабирует cₜ₋₁.`],
+  [`Классификация тональности отзыва — какая схема?`, [`One-to-many`, `Many-to-one`, `Many-to-many`], 1, `Последовательность слов → одна метка.`],
+  [`Что помогает против взрыва градиентов в RNN?`, [`Gradient clipping`, `Больше шагов`, `Сигмоида на выходе`], 0, `Ограничиваем норму градиента.`]
+]),
+
+T(`w11`, `Attention и трансформеры`, [
+  `В seq2seq на RNN весь вход сжимается в один вектор — узкое место. <b>Attention</b> (Bahdanau, 2014) позволяет декодеру на каждом шаге смотреть на все состояния энкодера с разными весами.`,
+  `В трансформере — <b>scaled dot-product attention</b>: <code>softmax(QKᵀ / √d_k)·V</code>. <b>Multi-head</b>: несколько голов с разными проекциями ловят разные типы связей, их выходы конкатенируются.`,
+  `Блок трансформера: attention → residual → LayerNorm → feed-forward сеть → residual → LayerNorm. Порядок токенов задают позиционные кодировки.`,
+  `Энкодер видит все токены. Декодер использует <b>causal mask</b>, чтобы токен не видел будущее, и cross-attention к выходу энкодера. Сложность attention — O(n²) по длине последовательности.`
+], [
+  [`Какое узкое место seq2seq решает attention?`, `Сжатие всего входа в один вектор фиксированного размера.`],
+  [`Зачем multi-head attention?`, `Разные головы улавливают разные типы связей между токенами.`],
+  [`Что такое causal mask?`, `Маска, запрещающая токену смотреть на будущие позиции.`],
+  [`Из чего состоит блок трансформера?`, `Attention и feed-forward, каждый с residual-связью и LayerNorm.`],
+  [`Сложность self-attention по длине n?`, `O(n²).`]
+], [
+  [`Зачем декодеру маска при обучении?`, [`Чтобы не подглядывать в следующий токен`, `Чтобы ускорить`, `Чтобы убрать паддинг`], 0, `Иначе предсказание следующего токена становится тривиальным.`],
+  [`Длину последовательности увеличили вдвое. Память на матрицу внимания…`, [`×2`, `×4`, `не изменится`], 1, `O(n²).`],
+  [`Откуда берутся K и V в cross-attention декодера?`, [`Из выхода энкодера`, `Из прошлых токенов декодера`, `Из позиционных кодировок`], 0, `Q — из декодера, K и V — из энкодера.`]
+]),
+
+T(`w12`, `Кластеризация и автоэнкодеры`, [
+  `Кластеризация без меток: <b>K-Means</b> (центры, шарообразные кластеры); <b>DBSCAN</b> (по плотности, находит кластеры любой формы и выбросы, параметры eps и min_samples); иерархическая (дендрограмма).`,
+  `Качество без меток оценивают <b>силуэтом</b> (от −1 до 1): насколько точка ближе к своему кластеру, чем к соседнему.`,
+  `<b>Автоэнкодер</b>: энкодер сжимает вход в маленький <b>латентный</b> вектор (bottleneck), декодер восстанавливает вход. Учится на ошибке реконструкции, метки не нужны.`,
+  `Применения: снижение размерности (нелинейный аналог PCA), <b>поиск аномалий</b> (большая ошибка реконструкции — необычный объект), удаление шума (denoising autoencoder восстанавливает чистый вход из зашумлённого).`
+], [
+  [`Чем DBSCAN лучше K-Means?`, `Находит кластеры произвольной формы, отмечает выбросы и не требует k.`],
+  [`Что измеряет силуэт?`, `Насколько точка ближе к своему кластеру, чем к ближайшему чужому.`],
+  [`Устройство автоэнкодера?`, `Энкодер → узкое латентное представление → декодер, восстанавливающий вход.`],
+  [`Как автоэнкодер ищет аномалии?`, `По большой ошибке реконструкции.`],
+  [`Что такое denoising autoencoder?`, `Автоэнкодер, который учится восстанавливать чистый вход из зашумлённого.`]
+], [
+  [`Кластеры в форме полумесяцев. Что выбрать?`, [`K-Means`, `DBSCAN`], 1, `DBSCAN смотрит на плотность, а не на расстояние до центра.`],
+  [`На чём обучается автоэнкодер?`, [`На метках классов`, `На ошибке восстановления входа`, `На наградах`], 1, `Цель — реконструкция.`],
+  [`Линейный автоэнкодер с MSE по сути похож на…`, [`PCA`, `K-Means`, `SVM`], 0, `Он находит то же подпространство, что PCA.`]
+]),
+
+T(`w13`, `GAN и VAE`, [
+  `<b>VAE</b> (вариационный автоэнкодер): энкодер выдаёт не точку, а распределение (μ, σ), из которого сэмплируется z. Потеря = реконструкция + <b>KL-дивергенция</b> к N(0, I). Латентное пространство получается гладким, и из случайного z можно генерировать новые объекты.`,
+  `<b>Reparameterization trick</b>: <code>z = μ + σ·ε</code>, где ε ~ N(0, 1). Так сэмплирование становится дифференцируемым.`,
+  `<b>GAN</b>: <b>генератор</b> создаёт подделки из шума, <b>дискриминатор</b> отличает их от настоящих. Они играют в минимакс-игру, и генератор учится обманывать дискриминатор.`,
+  `Проблемы GAN: нестабильное обучение и <b>mode collapse</b> (однообразные примеры). VAE стабильнее, но картинки размытее. Сейчас в генерации изображений доминируют диффузионные модели.`
+], [
+  [`Из чего состоит потеря VAE?`, `Ошибка реконструкции + KL-дивергенция к стандартному нормальному распределению.`],
+  [`Что такое reparameterization trick?`, `z = μ + σ·ε, чтобы сэмплирование было дифференцируемым.`],
+  [`Роли в GAN?`, `Генератор создаёт подделки, дискриминатор отличает их от реальных.`],
+  [`Что такое mode collapse?`, `Генератор выдаёт узкий набор однообразных примеров.`],
+  [`Типичный минус VAE по сравнению с GAN?`, `Более размытые изображения.`]
+], [
+  [`Зачем KL-член в VAE?`, [`Сделать латентное пространство пригодным для генерации`, `Ускорить обучение`, `Убрать декодер`], 0, `Он тянет распределения к N(0, I).`],
+  [`Генератор всегда рисует одну и ту же цифру. Это…`, [`Mode collapse`, `Переобучение дискриминатора`, `Норма`], 0, `Классическая проблема GAN.`],
+  [`Что получает генератор GAN на вход?`, [`Реальные изображения`, `Случайный шум`, `Метки дискриминатора`], 1, `Шум z из простого распределения.`]
+]),
+
+T(`w14`, `Современный DL: fine-tuning`, [
+  `Современный подход — брать большую <b>предобученную foundation-модель</b> (ViT, BERT, LLaMA, CLIP) и адаптировать её, а не учить с нуля.`,
+  `Варианты по возрастанию стоимости: <b>промптинг</b> и few-shot; <b>linear probing</b> (учим только голову); <b>PEFT</b> (LoRA, адаптеры, prefix tuning); <b>полный fine-tuning</b> всех весов.`,
+  `Риски: <b>катастрофическое забывание</b> исходных знаний и переобучение на маленьком датасете. Помогают маленький learning rate, мало эпох, заморозка нижних слоёв, LoRA.`,
+  `LLM после предобучения проходят <b>instruction tuning</b> (SFT на парах «инструкция → ответ») и выравнивание по предпочтениям (RLHF, DPO). В зрении популярны ViT и <b>CLIP</b>, который отображает картинки и тексты в одно пространство.`
+], [
+  [`Что такое foundation-модель?`, `Большая модель, предобученная на огромных данных и адаптируемая под много задач.`],
+  [`Что такое linear probing?`, `Обучение только линейной головы поверх замороженной модели.`],
+  [`Что такое катастрофическое забывание?`, `Потеря исходных знаний модели при дообучении на новой задаче.`],
+  [`Что такое instruction tuning?`, `Дообучение на парах «инструкция → ответ», чтобы модель следовала указаниям.`],
+  [`Что делает CLIP?`, `Отображает изображения и тексты в общее пространство эмбеддингов.`]
+], [
+  [`Самый дешёвый способ адаптации из перечисленных?`, [`Полный fine-tuning`, `Промптинг`, `LoRA`], 1, `Веса вообще не меняются.`],
+  [`После дообучения модель забыла общие знания. Что поможет?`, [`Больше learning rate`, `LoRA или меньший learning rate`, `Больше эпох`], 1, `Меньшие изменения весов — меньше забывания.`],
+  [`Для чего используют DPO?`, [`Выравнивание LLM по предпочтениям`, `Сжатие изображений`, `Кластеризация`], 0, `Direct preference optimization.`]
+])
+];
+
+const ES = [
+{ id:"basics", title:"Базовые фразы", cards:[
+ ["hola","привет","¡Hola! ¿Qué tal?","Привет! Как дела?"],
+ ["gracias","спасибо","Muchas gracias por todo.","Большое спасибо за всё."],
+ ["por favor","пожалуйста (просьба)","Un café, por favor.","Кофе, пожалуйста."],
+ ["de nada","не за что","—Gracias. —De nada.","— Спасибо. — Не за что."],
+ ["perdón","извините","Perdón, ¿dónde está el metro?","Извините, где метро?"],
+ ["lo siento","мне жаль","Lo siento, no puedo ir.","Мне жаль, я не могу пойти."],
+ ["¿cómo estás?","как ты?","Hola, Ana, ¿cómo estás?","Привет, Ана, как ты?"],
+ ["no entiendo","я не понимаю","Perdón, no entiendo.","Извините, я не понимаю."],
+ ["¿cuánto cuesta?","сколько стоит?","¿Cuánto cuesta este libro?","Сколько стоит эта книга?"],
+ ["hasta luego","до встречи","Nos vemos, ¡hasta luego!","Увидимся, до встречи!"],
+ ["buenos días","доброе утро","Buenos días, señora.","Доброе утро, сеньора."],
+ ["me llamo…","меня зовут…","Me llamo Pablo.","Меня зовут Пабло."]
+]},
+{ id:"verbs", title:"Частые глаголы", cards:[
+ ["ser","быть (постоянное свойство)","Soy estudiante.","Я студент."],
+ ["estar","быть, находиться (состояние)","Estoy cansado.","Я устал."],
+ ["tener","иметь","Tengo dos hermanos.","У меня два брата."],
+ ["hacer","делать","¿Qué haces hoy?","Что ты делаешь сегодня?"],
+ ["ir","идти, ехать","Voy al trabajo.","Я иду на работу."],
+ ["poder","мочь","¿Puedes ayudarme?","Можешь мне помочь?"],
+ ["querer","хотеть","Quiero aprender español.","Я хочу выучить испанский."],
+ ["saber","знать, уметь","No sé nadar.","Я не умею плавать."],
+ ["decir","говорить, сказать","¿Qué dices?","Что ты говоришь?"],
+ ["ver","видеть, смотреть","Vemos una película.","Мы смотрим фильм."],
+ ["dar","давать","Te doy mi número.","Даю тебе свой номер."],
+ ["venir","приходить","¿Vienes a la fiesta?","Придёшь на вечеринку?"],
+ ["hablar","разговаривать","Hablo un poco de español.","Я немного говорю по-испански."],
+ ["comer","есть, обедать","Comemos a las dos.","Мы обедаем в два."],
+ ["vivir","жить","Vivo en una ciudad grande.","Я живу в большом городе."]
+]},
+{ id:"food", title:"Еда", cards:[
+ ["el agua","вода","Un vaso de agua, por favor.","Стакан воды, пожалуйста."],
+ ["el pan","хлеб","Compro pan cada mañana.","Я покупаю хлеб каждое утро."],
+ ["la carne","мясо","No como carne.","Я не ем мясо."],
+ ["el pollo","курица","Hoy cenamos pollo.","Сегодня на ужин курица."],
+ ["el pescado","рыба (еда)","El pescado está muy fresco.","Рыба очень свежая."],
+ ["la manzana","яблоко","Como una manzana al día.","Я ем одно яблоко в день."],
+ ["el queso","сыр","Me encanta el queso.","Обожаю сыр."],
+ ["el huevo","яйцо","Dos huevos fritos, por favor.","Два жареных яйца, пожалуйста."],
+ ["la leche","молоко","Un café con leche.","Кофе с молоком."],
+ ["el arroz","рис","La paella se hace con arroz.","Паэлью готовят из риса."],
+ ["la cuenta","счёт","La cuenta, por favor.","Счёт, пожалуйста."],
+ ["tener hambre","быть голодным","Tengo mucha hambre.","Я очень голоден."]
+]},
+{ id:"time", title:"Время и дни", cards:[
+ ["hoy","сегодня","Hoy hace calor.","Сегодня жарко."],
+ ["mañana","завтра","Mañana trabajo.","Завтра я работаю."],
+ ["ayer","вчера","Ayer fui al cine.","Вчера я ходил в кино."],
+ ["ahora","сейчас","Ahora no puedo.","Сейчас не могу."],
+ ["siempre","всегда","Siempre llega tarde.","Он всегда опаздывает."],
+ ["nunca","никогда","Nunca bebo café.","Я никогда не пью кофе."],
+ ["la semana","неделя","La próxima semana.","На следующей неделе."],
+ ["el lunes","в понедельник","El lunes empiezo.","В понедельник начинаю."],
+ ["el viernes","пятница","¡Por fin es viernes!","Наконец-то пятница!"],
+ ["el fin de semana","выходные","¿Qué haces el fin de semana?","Что делаешь на выходных?"],
+ ["temprano","рано","Me levanto temprano.","Я встаю рано."],
+ ["tarde","поздно","Es tarde, me voy.","Уже поздно, я пошёл."]
+]},
+{ id:"adj", title:"Прилагательные", cards:[
+ ["grande","большой","Una casa grande.","Большой дом."],
+ ["pequeño","маленький","Un perro pequeño.","Маленькая собака."],
+ ["bueno","хороший","Es un buen libro.","Это хорошая книга."],
+ ["malo","плохой","Hace mal tiempo.","Плохая погода."],
+ ["nuevo","новый","Tengo un móvil nuevo.","У меня новый телефон."],
+ ["viejo","старый","Mi coche es viejo.","Моя машина старая."],
+ ["fácil","лёгкий, простой","El examen fue fácil.","Экзамен был лёгким."],
+ ["difícil","трудный","El español no es difícil.","Испанский не трудный."],
+ ["caro","дорогой","Este restaurante es caro.","Этот ресторан дорогой."],
+ ["barato","дешёвый","La fruta es barata aquí.","Фрукты здесь дешёвые."],
+ ["rápido","быстрый","Un tren rápido.","Быстрый поезд."],
+ ["cansado","уставший","Estoy muy cansada.","Я очень устала."]
+]}
+];
+
+/* ===== Испанский: новые колоды слов [es, ru, пример, перевод] ===== */
+const ES_MORE = [
+{ id: "numbers", title: "Числа", cards: [
+ [`uno`, `один`, `Solo uno, gracias.`, `Только один, спасибо.`],
+ [`dos`, `два`, `Dos cafés, por favor.`, `Два кофе, пожалуйста.`],
+ [`tres`, `три`, `Son las tres.`, `Сейчас три часа.`],
+ [`cinco`, `пять`, `Trabajo cinco días.`, `Я работаю пять дней.`],
+ [`diez`, `десять`, `Diez minutos más.`, `Ещё десять минут.`],
+ [`quince`, `пятнадцать`, `Tengo quince euros.`, `У меня пятнадцать евро.`],
+ [`veinte`, `двадцать`, `Tengo veinte años.`, `Мне двадцать лет.`],
+ [`treinta`, `тридцать`, `Hoy hace treinta grados.`, `Сегодня тридцать градусов.`],
+ [`cien`, `сто`, `Cuesta cien euros.`, `Стоит сто евро.`],
+ [`mil`, `тысяча`, `Mil gracias.`, `Огромное спасибо.`],
+ [`primero`, `первый`, `Es mi primer viaje.`, `Это моя первая поездка.`],
+ [`la mitad`, `половина`, `La mitad del pastel.`, `Половина торта.`]
+]},
+{ id: "questions", title: "Вопросы", cards: [
+ [`¿qué?`, `что?`, `¿Qué es esto?`, `Что это?`],
+ [`¿quién?`, `кто?`, `¿Quién es ella?`, `Кто она?`],
+ [`¿dónde?`, `где?`, `¿Dónde vives?`, `Где ты живёшь?`],
+ [`¿adónde?`, `куда?`, `¿Adónde vas?`, `Куда ты идёшь?`],
+ [`¿cuándo?`, `когда?`, `¿Cuándo empieza la clase?`, `Когда начинается урок?`],
+ [`¿por qué?`, `почему?`, `¿Por qué estás triste?`, `Почему ты грустный?`],
+ [`¿cómo?`, `как?`, `¿Cómo se dice «gracias» en ruso?`, `Как сказать «gracias» по-русски?`],
+ [`¿cuánto?`, `сколько?`, `¿Cuánto tiempo tienes?`, `Сколько у тебя времени?`],
+ [`¿cuál?`, `который? какой?`, `¿Cuál prefieres?`, `Какой тебе больше нравится?`],
+ [`¿de dónde?`, `откуда?`, `¿De dónde eres?`, `Откуда ты?`],
+ [`¿a qué hora?`, `во сколько?`, `¿A qué hora sale el tren?`, `Во сколько отходит поезд?`],
+ [`¿qué tal?`, `как дела? как прошло?`, `¿Qué tal el examen?`, `Как прошёл экзамен?`]
+]},
+{ id: "connectors", title: "Связки и наречия", cards: [
+ [`pero`, `но`, `Quiero ir, pero no puedo.`, `Я хочу пойти, но не могу.`],
+ [`porque`, `потому что`, `No salgo porque llueve.`, `Я не выхожу, потому что идёт дождь.`],
+ [`también`, `тоже`, `Yo también.`, `Я тоже.`],
+ [`tampoco`, `тоже не`, `Yo tampoco.`, `Я тоже нет.`],
+ [`entonces`, `тогда, значит`, `Entonces, ¿vamos?`, `Тогда идём?`],
+ [`después`, `потом, после`, `Después de clase.`, `После урока.`],
+ [`antes`, `раньше, до`, `Antes de comer.`, `Перед едой.`],
+ [`muy`, `очень`, `Muy bien.`, `Очень хорошо.`],
+ [`mucho`, `много`, `Trabajo mucho.`, `Я много работаю.`],
+ [`un poco`, `немного`, `Hablo un poco.`, `Я немного говорю.`],
+ [`todavía`, `ещё, всё ещё`, `Todavía no.`, `Ещё нет.`],
+ [`ya`, `уже`, `Ya terminé.`, `Я уже закончил.`]
+]},
+{ id: "family", title: "Семья и люди", cards: [
+ [`la familia`, `семья`, `Mi familia es grande.`, `У меня большая семья.`],
+ [`la madre`, `мать`, `Mi madre es médica.`, `Моя мама — врач.`],
+ [`el padre`, `отец`, `Mi padre trabaja mucho.`, `Мой папа много работает.`],
+ [`el hermano`, `брат`, `Tengo un hermano mayor.`, `У меня есть старший брат.`],
+ [`la hermana`, `сестра`, `Mi hermana vive en Madrid.`, `Моя сестра живёт в Мадриде.`],
+ [`los padres`, `родители`, `Mis padres están en casa.`, `Мои родители дома.`],
+ [`el hijo`, `сын`, `Su hijo tiene cinco años.`, `Его сыну пять лет.`],
+ [`la hija`, `дочь`, `La hija estudia inglés.`, `Дочь учит английский.`],
+ [`los abuelos`, `бабушка и дедушка`, `Visito a mis abuelos los domingos.`, `По воскресеньям я навещаю бабушку и дедушку.`],
+ [`el amigo`, `друг`, `Es mi mejor amigo.`, `Это мой лучший друг.`],
+ [`la novia`, `девушка (подруга), невеста`, `Mi novia es de Chile.`, `Моя девушка из Чили.`],
+ [`casado`, `женатый, замужняя`, `¿Estás casado?`, `Ты женат?`]
+]},
+{ id: "home", title: "Дом", cards: [
+ [`la casa`, `дом`, `Estoy en casa.`, `Я дома.`],
+ [`el piso`, `квартира (Испания); этаж`, `Busco un piso.`, `Я ищу квартиру.`],
+ [`la habitación`, `комната`, `Mi habitación es pequeña.`, `Моя комната маленькая.`],
+ [`la cocina`, `кухня`, `Cenamos en la cocina.`, `Мы ужинаем на кухне.`],
+ [`el baño`, `ванная, туалет`, `¿Dónde está el baño?`, `Где туалет?`],
+ [`la cama`, `кровать`, `Me voy a la cama.`, `Я пошёл спать.`],
+ [`la mesa`, `стол`, `La comida está en la mesa.`, `Еда на столе.`],
+ [`la silla`, `стул`, `Toma una silla.`, `Возьми стул.`],
+ [`la puerta`, `дверь`, `Cierra la puerta.`, `Закрой дверь.`],
+ [`la ventana`, `окно`, `Abre la ventana, por favor.`, `Открой окно, пожалуйста.`],
+ [`la llave`, `ключ`, `No encuentro las llaves.`, `Не могу найти ключи.`],
+ [`el vecino`, `сосед`, `Mi vecino es muy simpático.`, `Мой сосед очень приятный.`]
+]},
+{ id: "city", title: "Город и транспорт", cards: [
+ [`la calle`, `улица`, `Vivo en esta calle.`, `Я живу на этой улице.`],
+ [`la ciudad`, `город`, `Madrid es una ciudad enorme.`, `Мадрид — огромный город.`],
+ [`el centro`, `центр`, `Vamos al centro.`, `Поехали в центр.`],
+ [`la tienda`, `магазин`, `La tienda cierra a las nueve.`, `Магазин закрывается в девять.`],
+ [`el banco`, `банк; скамейка`, `Necesito ir al banco.`, `Мне нужно в банк.`],
+ [`la estación`, `вокзал, станция`, `¿Dónde está la estación?`, `Где вокзал?`],
+ [`el autobús`, `автобус`, `Tomo el autobús.`, `Я сажусь на автобус.`],
+ [`el coche`, `машина`, `Voy en coche.`, `Я еду на машине.`],
+ [`el aeropuerto`, `аэропорт`, `Llegamos al aeropuerto.`, `Мы приехали в аэропорт.`],
+ [`a la derecha`, `направо, справа`, `Gira a la derecha.`, `Поверни направо.`],
+ [`a la izquierda`, `налево, слева`, `Está a la izquierda.`, `Это слева.`],
+ [`cerca`, `близко`, `El hotel está cerca.`, `Отель близко.`]
+]},
+{ id: "work", title: "Работа и учёба", cards: [
+ [`el trabajo`, `работа`, `Busco trabajo.`, `Я ищу работу.`],
+ [`la empresa`, `компания`, `Trabajo en una empresa pequeña.`, `Я работаю в небольшой компании.`],
+ [`el jefe`, `начальник`, `Mi jefe es exigente.`, `Мой начальник требовательный.`],
+ [`la reunión`, `совещание, встреча`, `Tengo una reunión a las diez.`, `У меня совещание в десять.`],
+ [`el ordenador`, `компьютер (Испания)`, `Mi ordenador es lento.`, `Мой компьютер медленный.`],
+ [`el correo`, `почта, письмо`, `Te mando un correo.`, `Отправлю тебе письмо.`],
+ [`la universidad`, `университет`, `Estudio en la universidad.`, `Я учусь в университете.`],
+ [`la clase`, `урок, занятие`, `La clase empieza a las ocho.`, `Занятие начинается в восемь.`],
+ [`el examen`, `экзамен`, `Mañana tengo un examen.`, `Завтра у меня экзамен.`],
+ [`aprender`, `учить, узнавать`, `Aprendo algo nuevo cada día.`, `Каждый день я узнаю что-то новое.`],
+ [`estudiar`, `учиться, заниматься`, `Estudio por la noche.`, `Я занимаюсь по вечерам.`],
+ [`los deberes`, `домашнее задание`, `Hago los deberes.`, `Я делаю домашнее задание.`]
+]},
+{ id: "feelings", title: "Чувства и состояние", cards: [
+ [`feliz`, `счастливый`, `Estoy muy feliz.`, `Я очень счастлив.`],
+ [`triste`, `грустный`, `¿Por qué estás triste?`, `Почему ты грустишь?`],
+ [`contento`, `довольный`, `Estoy contento con el resultado.`, `Я доволен результатом.`],
+ [`enfadado`, `сердитый`, `Mi padre está enfadado.`, `Мой папа сердится.`],
+ [`nervioso`, `взволнованный, нервный`, `Estoy nervioso por el examen.`, `Я волнуюсь из-за экзамена.`],
+ [`aburrido`, `скучающий; скучный`, `Estoy aburrido.`, `Мне скучно.`],
+ [`preocupado`, `обеспокоенный`, `Está preocupada por su hijo.`, `Она беспокоится о сыне.`],
+ [`tranquilo`, `спокойный`, `Tranquilo, todo está bien.`, `Спокойно, всё хорошо.`],
+ [`tener miedo`, `бояться`, `Tengo miedo de los perros.`, `Я боюсь собак.`],
+ [`tener sueño`, `хотеть спать`, `Tengo mucho sueño.`, `Я очень хочу спать.`],
+ [`tener razón`, `быть правым`, `Tienes razón.`, `Ты прав.`],
+ [`echar de menos`, `скучать по кому-то`, `Te echo de menos.`, `Я скучаю по тебе.`]
+]},
+{ id: "body", title: "Тело и здоровье", cards: [
+ [`la cabeza`, `голова`, `Me duele la cabeza.`, `У меня болит голова.`],
+ [`el estómago`, `желудок, живот`, `Me duele el estómago.`, `У меня болит живот.`],
+ [`la mano`, `рука (кисть)`, `Lávate las manos.`, `Помой руки.`],
+ [`el pie`, `стопа, нога`, `Voy a pie.`, `Я иду пешком.`],
+ [`los ojos`, `глаза`, `Tiene los ojos azules.`, `У неё голубые глаза.`],
+ [`la espalda`, `спина`, `Me duele la espalda.`, `У меня болит спина.`],
+ [`el médico`, `врач`, `Necesito un médico.`, `Мне нужен врач.`],
+ [`la farmacia`, `аптека`, `¿Hay una farmacia cerca?`, `Здесь рядом есть аптека?`],
+ [`enfermo`, `больной`, `Hoy estoy enfermo.`, `Сегодня я болею.`],
+ [`la fiebre`, `температура, жар`, `Tengo fiebre.`, `У меня температура.`],
+ [`doler`, `болеть (о боли)`, `¿Te duele mucho?`, `Сильно болит?`],
+ [`descansar`, `отдыхать`, `Necesitas descansar.`, `Тебе нужно отдохнуть.`]
+]},
+{ id: "weather", title: "Погода и природа", cards: [
+ [`el tiempo`, `погода; время`, `¿Qué tiempo hace?`, `Какая погода?`],
+ [`hace calor`, `жарко`, `En verano hace calor.`, `Летом жарко.`],
+ [`hace frío`, `холодно`, `Hoy hace mucho frío.`, `Сегодня очень холодно.`],
+ [`llueve`, `идёт дождь`, `Llueve mucho en otoño.`, `Осенью часто идёт дождь.`],
+ [`nieva`, `идёт снег`, `En invierno nieva.`, `Зимой идёт снег.`],
+ [`hace sol`, `солнечно`, `Hoy hace sol.`, `Сегодня солнечно.`],
+ [`hace viento`, `ветрено`, `Hace mucho viento.`, `Очень ветрено.`],
+ [`el mar`, `море`, `Vamos al mar.`, `Поехали на море.`],
+ [`la playa`, `пляж`, `Pasamos el día en la playa.`, `Мы провели день на пляже.`],
+ [`la montaña`, `гора, горы`, `Me gusta la montaña.`, `Я люблю горы.`],
+ [`el verano`, `лето`, `En verano voy a la playa.`, `Летом я езжу на пляж.`],
+ [`el invierno`, `зима`, `El invierno es largo aquí.`, `Зима здесь долгая.`]
+]},
+{ id: "shopping", title: "Покупки и одежда", cards: [
+ [`comprar`, `покупать`, `Quiero comprar zapatos.`, `Я хочу купить обувь.`],
+ [`pagar`, `платить`, `¿Puedo pagar con tarjeta?`, `Можно оплатить картой?`],
+ [`la tarjeta`, `карта (банковская)`, `Solo tengo tarjeta.`, `У меня только карта.`],
+ [`el dinero`, `деньги`, `No tengo dinero.`, `У меня нет денег.`],
+ [`el precio`, `цена`, `¿Cuál es el precio?`, `Какая цена?`],
+ [`la talla`, `размер (одежды)`, `¿Qué talla usas?`, `Какой у тебя размер?`],
+ [`la camiseta`, `футболка`, `Una camiseta negra.`, `Чёрная футболка.`],
+ [`los pantalones`, `брюки`, `Estos pantalones son caros.`, `Эти брюки дорогие.`],
+ [`los zapatos`, `обувь, туфли`, `Necesito zapatos nuevos.`, `Мне нужна новая обувь.`],
+ [`probarse`, `примерять`, `¿Puedo probármelo?`, `Можно примерить?`],
+ [`las rebajas`, `распродажа`, `En enero hay rebajas.`, `В январе распродажи.`],
+ [`el probador`, `примерочная`, `¿Dónde está el probador?`, `Где примерочная?`]
+]},
+{ id: "travel", title: "Путешествия", cards: [
+ [`el viaje`, `поездка`, `¡Buen viaje!`, `Хорошей поездки!`],
+ [`viajar`, `путешествовать`, `Me encanta viajar.`, `Обожаю путешествовать.`],
+ [`el billete`, `билет`, `Compré el billete de tren.`, `Я купил билет на поезд.`],
+ [`el pasaporte`, `паспорт`, `Aquí tiene mi pasaporte.`, `Вот мой паспорт.`],
+ [`el hotel`, `отель`, `El hotel está en el centro.`, `Отель в центре.`],
+ [`la reserva`, `бронь`, `Tengo una reserva.`, `У меня есть бронь.`],
+ [`la maleta`, `чемодан`, `Mi maleta es azul.`, `Мой чемодан синий.`],
+ [`la salida`, `выход; отправление`, `¿Dónde está la salida?`, `Где выход?`],
+ [`la llegada`, `прибытие`, `La llegada es a las seis.`, `Прибытие в шесть.`],
+ [`perder`, `терять; опоздать на`, `Perdí el avión.`, `Я опоздал на самолёт.`],
+ [`el mapa`, `карта (местности)`, `¿Tienes un mapa?`, `У тебя есть карта?`],
+ [`las vacaciones`, `отпуск, каникулы`, `Estoy de vacaciones.`, `Я в отпуске.`]
+]},
+{ id: "verbs2", title: "Глаголы 2", cards: [
+ [`tomar`, `брать; пить`, `Tomo un café.`, `Я пью кофе.`],
+ [`llegar`, `приходить, прибывать`, `Llego a las ocho.`, `Я приду в восемь.`],
+ [`salir`, `выходить`, `Salgo de casa temprano.`, `Я рано выхожу из дома.`],
+ [`volver`, `возвращаться`, `Vuelvo mañana.`, `Я вернусь завтра.`],
+ [`buscar`, `искать`, `Busco mis llaves.`, `Я ищу свои ключи.`],
+ [`encontrar`, `находить`, `No encuentro el móvil.`, `Не могу найти телефон.`],
+ [`necesitar`, `нуждаться`, `Necesito ayuda.`, `Мне нужна помощь.`],
+ [`esperar`, `ждать; надеяться`, `Te espero aquí.`, `Жду тебя здесь.`],
+ [`pensar`, `думать`, `Pienso en ti.`, `Я думаю о тебе.`],
+ [`creer`, `верить, считать`, `Creo que sí.`, `Думаю, да.`],
+ [`conocer`, `знать (быть знакомым)`, `¿Conoces a María?`, `Ты знаешь Марию?`],
+ [`entender`, `понимать`, `No te entiendo.`, `Я тебя не понимаю.`],
+ [`trabajar`, `работать`, `Trabajo desde casa.`, `Я работаю из дома.`],
+ [`dormir`, `спать`, `Duermo ocho horas.`, `Я сплю восемь часов.`],
+ [`abrir`, `открывать`, `Abre la puerta.`, `Открой дверь.`],
+ [`cerrar`, `закрывать`, `Cierran a las diez.`, `Они закрываются в десять.`]
+]}
+];
+
+/* ===== Испанский: грамматика ===== */
+const ES_GRAMMAR = [
+T(`g-articles`, `Род и артикли`, [
+  `У каждого существительного есть род. Обычно на <b>-o</b> — мужской (el libro), на <b>-a</b> — женский (la casa). Исключения запоминают: <b>el día</b>, <b>el problema</b>, <b>el mapa</b>, <b>la mano</b>.`,
+  `Определённые артикли: <b>el</b>, <b>la</b>, во множественном <b>los</b>, <b>las</b>. Неопределённые («какой-то, несколько»): <b>un</b>, <b>una</b>, <b>unos</b>, <b>unas</b>.`,
+  `Множественное число: после гласной добавляем <b>-s</b> (casa → casas), после согласной <b>-es</b> (ciudad → ciudades). Конечная z меняется на c: lápiz → lápices.`,
+  `Слияния: <b>a + el = al</b> (Voy al cine), <b>de + el = del</b> (la casa del profesor). Прилагательное согласуется с существительным в роде и числе: las casas blancas.`
+], [
+  [`Какой артикль у «día»?`, `el día — мужской род, хотя слово на -a.`],
+  [`Множественное число от «ciudad»?`, `ciudades`],
+  [`a + el = ?`, `al`],
+  [`de + el = ?`, `del`],
+  [`Неопределённые артикли?`, `un, una, unos, unas`]
+], [
+  [`___ problema es grave.`, [`La`, `El`], 1, `problema — мужской род, исключение.`],
+  [`Voy ___ cine.`, [`a el`, `al`, `del`], 1, `a + el сливаются в al.`],
+  [`Множественное число от «lápiz»?`, [`lápizs`, `lápices`, `lápizes`], 1, `z перед -es меняется на c.`]
+]),
+
+T(`g-present`, `Настоящее время: -ar, -er, -ir`, [
+  `Глаголы делятся на три группы по окончанию инфинитива: <b>-ar</b> (hablar), <b>-er</b> (comer), <b>-ir</b> (vivir). Отбрасываем окончание и добавляем личное.`,
+  C(`hablar: hablo, hablas, habla, hablamos, habláis, hablan
+comer:  como,  comes,  come,  comemos,  coméis,  comen
+vivir:  vivo,  vives,  vive,  vivimos,  vivís,   viven`),
+  `Местоимение обычно опускают: лицо и так видно по окончанию. <b>Hablo español</b> — «Я говорю по-испански».`,
+  `<b>usted</b> (вы, вежливо) спрягается как él, <b>ustedes</b> — как ellos. В Латинской Америке vosotros почти не используют: там для «вы» во множественном всегда ustedes.`
+], [
+  [`comer — «я»?`, `como`],
+  [`vivir — «мы»?`, `vivimos`],
+  [`hablar — «они»?`, `hablan`],
+  [`С какой формой совпадает usted?`, `С 3-м лицом единственного числа (él, ella).`],
+  [`Почему местоимение часто опускают?`, `Окончание глагола уже показывает лицо.`]
+], [
+  [`Nosotros ___ en Madrid. (vivir)`, [`vivemos`, `vivimos`, `viven`], 1, `Глаголы на -ir: nosotros → -imos.`],
+  [`¿Tú ___ inglés? (hablar)`, [`hablas`, `hables`, `habla`], 0, `Глаголы на -ar: tú → -as.`],
+  [`Ellos ___ mucho. (comer)`, [`comen`, `coman`, `comemos`], 0, `Глаголы на -er: ellos → -en.`]
+]),
+
+T(`g-irregular`, `Неправильные глаголы`, [
+  `Самые частые глаголы — неправильные, их формы учат наизусть.`,
+  C(`ser:   soy, eres, es, somos, sois, son
+estar: estoy, estás, está, estamos, estáis, están
+ir:    voy, vas, va, vamos, vais, van
+tener: tengo, tienes, tiene, tenemos, tenéis, tienen`),
+  `Глаголы на <b>-go</b> в форме «я»: hacer → <b>hago</b>, poner → pongo, salir → salgo, decir → digo, venir → vengo.`,
+  `Глаголы с <b>чередованием</b> гласной в корне (кроме nosotros и vosotros): e → ie (querer → quiero), o → ue (poder → puedo, dormir → duermo), e → i (pedir → pido).`
+], [
+  [`ir — «я»?`, `voy`],
+  [`tener — «ты»?`, `tienes`],
+  [`hacer — «я»?`, `hago`],
+  [`poder — «я»?`, `puedo`],
+  [`querer — «мы»?`, `queremos: в nosotros чередования нет.`]
+], [
+  [`Yo ___ a casa. (ir)`, [`vo`, `voy`, `iro`], 1, `ir полностью неправильный.`],
+  [`Ella ___ mucho. (dormir)`, [`dorme`, `duerme`, `durme`], 1, `В корне o → ue.`],
+  [`Yo ___ la cama. (hacer)`, [`haco`, `hago`, `hace`], 1, `hacer — глагол на -go.`]
+]),
+
+T(`g-serestar`, `Ser или estar`, [
+  `Оба глагола значат «быть». <b>Ser</b> — сущность и постоянные свойства, <b>estar</b> — состояние и местоположение.`,
+  `<b>Ser</b>: кто ты и что это (Soy estudiante), откуда (Soy de Kazajistán), характер и внешность (Es alto), время и дата (Son las tres), материал (Es de madera).`,
+  `<b>Estar</b>: где находится (Estoy en casa), временное состояние и настроение (Estoy cansado), результат действия (La puerta está cerrada), процесс: estar + герундий (Estoy comiendo).`,
+  `Смысл может меняться: <b>es aburrido</b> — он скучный, <b>está aburrido</b> — ему скучно; <b>es listo</b> — он умный, <b>está listo</b> — он готов.`
+], [
+  [`Ser или estar: местоположение?`, `estar — Estoy en casa.`],
+  [`Ser или estar: профессия?`, `ser — Soy ingeniero.`],
+  [`Es aburrido или está aburrido?`, `Он скучный / ему скучно.`],
+  [`Es listo или está listo?`, `Он умный / он готов.`],
+  [`Ser или estar: время?`, `ser — Son las cinco.`]
+], [
+  [`Madrid ___ en España.`, [`es`, `está`], 1, `Местоположение — estar.`],
+  [`Mi hermano ___ médico.`, [`es`, `está`], 0, `Профессия — ser.`],
+  [`Hoy ___ muy cansada.`, [`soy`, `estoy`], 1, `Временное состояние — estar.`]
+]),
+
+T(`g-gustar`, `Gustar и похожие глаголы`, [
+  `<b>Gustar</b> устроен как русское «мне нравится»: подлежащее — то, что нравится. Глагол согласуется с этой вещью: <b>me gusta</b> el café, <b>me gustan</b> los perros.`,
+  `Местоимения: <b>me</b>, <b>te</b>, <b>le</b>, <b>nos</b>, <b>os</b>, <b>les</b>. С инфинитивом всегда единственное число: Me gusta leer y bailar.`,
+  `Для ясности добавляют: <b>a mí</b> me gusta, <b>a ella</b> le gusta, <b>a Pablo</b> le gusta. Отрицание: <b>no me gusta</b>.`,
+  `Так же работают <b>encantar</b> (обожать: Me encanta), <b>doler</b> (Me duele la cabeza), <b>interesar</b>, <b>importar</b>.`
+], [
+  [`«Мне нравятся собаки»?`, `Me gustan los perros.`],
+  [`«Ей нравится читать»?`, `Le gusta leer.`],
+  [`«Нам нравится музыка»?`, `Nos gusta la música.`],
+  [`«У меня болят ноги»?`, `Me duelen los pies.`],
+  [`Какое число у gustar с инфинитивом?`, `Единственное: me gusta bailar.`]
+], [
+  [`Me ___ las películas de terror.`, [`gusta`, `gustan`], 1, `Нравятся фильмы — множественное число.`],
+  [`A mis padres ___ gusta viajar.`, [`les`, `los`, `le`], 0, `«Им» — les.`],
+  [`Me ___ la cabeza.`, [`duele`, `duelo`, `duelen`], 0, `Болит голова — 3-е лицо единственного числа.`]
+]),
+
+T(`g-future`, `Будущее: ir a + инфинитив`, [
+  `Проще всего говорить о планах так: <b>ir a + инфинитив</b>. Voy a estudiar — я буду заниматься, собираюсь заниматься.`,
+  C(`voy a comer        я поем / собираюсь поесть
+vas a ver          (ты) увидишь
+vamos a viajar     мы поедем путешествовать
+¿Qué vas a hacer mañana?`),
+  `<b>Vamos a + инфинитив</b> ещё значит «давай(те)»: ¡Vamos a bailar! — Давай танцевать!`,
+  `Есть и простое будущее время (hablaré, comeré), но в разговоре ir a встречается чаще. Слова-подсказки: mañana, luego, esta noche, el próximo año.`
+], [
+  [`«Я собираюсь учиться»?`, `Voy a estudiar.`],
+  [`«Что ты будешь делать завтра?»`, `¿Qué vas a hacer mañana?`],
+  [`Второе значение «vamos a + инфинитив»?`, `«Давай(те)…»: ¡Vamos a comer!`],
+  [`«Мы поедем в Испанию»?`, `Vamos a ir a España.`],
+  [`Как образуется ближайшее будущее?`, `Форма ir + a + инфинитив.`]
+], [
+  [`Mañana ___ a trabajar. (я)`, [`voy`, `ir`, `vaya`], 0, `Нужна форма ir для «я»: voy a trabajar.`],
+  [`«Они купят машину»:`, [`Van a comprar un coche`, `Van comprar un coche`, `Va a comprar un coche`], 0, `ellos → van, и обязателен предлог a.`],
+  [`¡Vamos a bailar! значит…`, [`Мы танцевали`, `Давай танцевать!`, `Мы не танцуем`], 1, `Vamos a здесь — приглашение.`]
+]),
+
+T(`g-past`, `Прошедшее: pretérito indefinido`, [
+  `<b>Pretérito indefinido</b> — завершённое действие в прошлом в определённый момент: ayer, el año pasado, en 2020.`,
+  C(`hablar: hablé, hablaste, habló, hablamos, hablasteis, hablaron
+comer:  comí,  comiste,  comió,  comimos,  comisteis,  comieron
+vivir:  viví,  viviste,  vivió,  vivimos,  vivisteis,  vivieron`),
+  `Ударение меняет смысл: <b>hablo</b> — я говорю, <b>habló</b> — он сказал.`,
+  `Частые неправильные: у ir и ser одинаковые формы — <b>fui, fuiste, fue, fuimos, fuisteis, fueron</b>; hacer → <b>hice</b>, hizo; tener → <b>tuve</b>; estar → <b>estuve</b>; poder → <b>pude</b>.`
+], [
+  [`hablar — «я» в прошедшем?`, `hablé`],
+  [`comer — «он» в прошедшем?`, `comió`],
+  [`ir — «я» в прошедшем?`, `fui`],
+  [`hacer — «я» в прошедшем?`, `hice`],
+  [`hablo или habló?`, `Я говорю / он сказал (прошедшее).`]
+], [
+  [`Ayer ___ al cine. (ir, yo)`, [`iba`, `fui`, `voy`], 1, `Завершённое действие вчера — fui.`],
+  [`El año pasado ellos ___ en México. (vivir)`, [`vivieron`, `vivían`, `viven`], 0, `Indefinido: ellos → -ieron.`],
+  [`¿Qué ___ ayer? (hacer, tú)`, [`haciste`, `hiciste`, `hacías`], 1, `Неправильная основа hic-.`]
+]),
+
+T(`g-reflexive`, `Возвратные глаголы`, [
+  `У возвратных глаголов в инфинитиве есть <b>-se</b>: <b>levantarse</b> (вставать), <b>llamarse</b> (называться), <b>ducharse</b> (принимать душ). Действие направлено на себя.`,
+  `Местоимение стоит перед глаголом и меняется по лицам: <b>me</b> levanto, <b>te</b> levantas, <b>se</b> levanta, <b>nos</b> levantamos, <b>os</b> levantáis, <b>se</b> levantan.`,
+  `С инфинитивом местоимение можно присоединить в конце: <b>Voy a ducharme</b> = Me voy a duchar.`,
+  `Распорядок дня: despertarse (me despierto — просыпаюсь), vestirse (me visto — одеваюсь), acostarse (me acuesto — ложусь спать).`
+], [
+  [`«Меня зовут…»`, `Me llamo…`],
+  [`levantarse — «я»?`, `me levanto`],
+  [`«Во сколько ты ложишься спать?»`, `¿A qué hora te acuestas?`],
+  [`Куда ставить местоимение с инфинитивом?`, `Перед спрягаемым глаголом или в конце инфинитива: voy a ducharme.`],
+  [`despertarse — «я»?`, `me despierto`]
+], [
+  [`Nosotros ___ levantamos a las siete.`, [`se`, `nos`, `os`], 1, `nosotros → nos.`],
+  [`¿Cómo ___ llamas?`, [`te`, `se`, `me`], 0, `tú → te.`],
+  [`«Я одеваюсь»:`, [`Me visto`, `Me vesto`, `Yo vesto`], 0, `vestirse: e → i.`]
+])
+];
+
+/* ===== Сборка курсов ===== */
+const byId = id => {
+  const t = ML.find(x => x.id === id) || M3_NEW.find(x => x.id === id) || M4_NEW.find(x => x.id === id);
+  if (!t) throw new Error("Нет темы " + id);
+  return t;
+};
+(function patchBase() {
+  const lr = byId("linreg");
+  lr.title = "Линейная и полиномиальная регрессия";
+  lr.lesson.push("<b>Полиномиальная регрессия</b> — та же линейная модель, но на признаках x, x², x³…: <code>PolynomialFeatures(degree=3)</code> + <code>LinearRegression</code>. Высокая степень легко переобучается, поэтому её сочетают с регуляризацией.");
+  lr.cards.push(["Что такое полиномиальная регрессия?", "Линейная регрессия на признаках x, x², x³… — модель нелинейна по x, но линейна по весам."]);
+  byId("overfit").title = "Переобучение, Ridge и Lasso";
+  byId("clf").title = "Логрегрессия и метрики";
+})();
+
+const COURSES = {
+  aiml: {
+    name: "AI/ML-курс", tab: "AI/ML", color: "ml", numbered: true,
+    modules: [
+      { id: "m1", title: "Python и инструменты анализа данных", topics: M1, exam: { name: "Тест модуля", n: 10 } },
+      { id: "m2", title: "Статистика и вайбкодинг с AI", topics: M2, exam: { name: "Тест модуля", n: 10 } },
+      { id: "m3", title: "Классическое машинное обучение",
+        topics: ["basics", "linreg", "gd", "overfit", "clf", "knn-svm", "trees", "unsup", "fe", "pipeline"].map(byId),
+        exam: { name: "Тест модуля", n: 12 } },
+      { id: "m4", title: "Deep Learning и нейронные сети",
+        topics: ["nn", "pytorch", "cnn-cv", "transformers", "hf", "lora"].map(byId),
+        exam: { name: "Тест модуля", n: 10 } },
+      { id: "m5", title: "AI-приложения: чатботы и RAG", topics: M5, exam: { name: "Тест модуля", n: 10 } },
+      { id: "m6", title: "MLOps и деплой в продакшен", topics: M6, exam: { name: "Тест модуля", n: 10 } }
+    ]
+  },
+  dl: {
+    name: "Deep Learning", tab: "DL", color: "dl", numbered: true,
+    modules: [
+      { id: "a", title: "Недели 1–7", topics: DL_A, exam: { name: "Midterm", n: 15 }, weekStart: 1 },
+      { id: "b", title: "Недели 9–14", topics: DL_B, exam: { name: "Endterm", n: 20, cumulative: true }, weekStart: 9 }
+    ]
+  },
+  es: {
+    name: "Испанский", tab: "Español", color: "es", numbered: false, deck: true,
+    modules: (() => {
+      const all = ES.concat(ES_MORE), d = id => all.find(t => t.id === id);
+      return [
+        { id: "decks", title: "Слова: старт", topics: ["basics", "verbs", "numbers", "questions", "connectors", "family", "time"].map(d), exam: { name: "Проверка слов", n: 15 } },
+        { id: "grammar", title: "Грамматика", topics: ES_GRAMMAR, exam: { name: "Тест по грамматике", n: 12 } },
+        { id: "life", title: "Слова: жизнь", topics: ["food", "adj", "home", "city", "work", "feelings", "body", "weather", "shopping", "travel", "verbs2"].map(d), exam: { name: "Проверка слов", n: 15 } }
+      ];
+    })()
+  }
+};
+const ORDER = ["aiml", "dl", "es"];
+
+
+/* ======================= ХРАНЕНИЕ ======================= */
+const NS = "tetradka:";
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(NS + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(NS + k, JSON.stringify(v)); } catch (e) {} }
+};
+let progress = store.get("progress", {});   // "курс/тема/i" -> {b: уровень, d: день следующего показа}
+let meta = Object.assign({ streak: 0, last: null, read: {}, quiz: {}, tab: "aiml", dir: "es-ru", doneToday: 0, doneDay: null, open: {}, v: 1 }, store.get("meta", {}));
+/* миграция с первой версии: ml/* → aiml/* */
+if (meta.v < 2) {
+  const np = {};
+  for (const k in progress) np[k.startsWith("ml/") ? "aiml/" + k.slice(3) : k] = progress[k];
+  progress = np;
+  const nr = {}, nq = {};
+  for (const k in meta.read) nr[k.includes("/") ? k : "aiml/" + k] = meta.read[k];
+  for (const k in meta.quiz) nq[k.includes("/") ? k : "aiml/" + k] = meta.quiz[k];
+  meta.read = nr; meta.quiz = nq;
+  if (!COURSES[meta.tab]) meta.tab = meta.tab === "es" ? "es" : "aiml";
+  meta.v = 2;
+}
+const saveAll = () => { store.set("progress", progress); store.set("meta", meta); };
+
+/* ======================= ИНТЕРВАЛЫ ======================= */
+const INTERVALS = [0, 1, 3, 7, 16, 35, 80];
+const MAX_B = INTERVALS.length - 1;
+const NEW_PER_SESSION = 8;
+const dayNum = () => { const d = new Date(); return Math.floor((d.getTime() - d.getTimezoneOffset() * 60000) / 864e5); };
+const key = (sid, tid, i) => sid + "/" + tid + "/" + i;
+const allTopics = sid => COURSES[sid].modules.flatMap(m => m.topics);
+const findTopic = (sid, tid) => allTopics(sid).find(t => t.id === tid);
+
+function topicStats(sid, t) {
+  const now = dayNum(); let due = 0, fresh = 0, pts = 0;
+  t.cards.forEach((c, i) => {
+    const p = progress[key(sid, t.id, i)];
+    if (!p) fresh++; else { if (p.d <= now) due++; pts += Math.min(p.b, 4); }
+  });
+  return { total: t.cards.length, due, fresh, mastery: pts / (4 * t.cards.length) };
+}
+function groupStats(sid, topics) {
+  return topics.reduce((a, t) => { const s = topicStats(sid, t); a.due += s.due; a.total += s.total; a.m += s.mastery * s.total; return a; }, { due: 0, total: 0, m: 0 });
+}
+const courseDue = sid => groupStats(sid, allTopics(sid)).due;
+
+function bumpStreak() {
+  const now = dayNum();
+  if (meta.doneDay !== now) { meta.doneDay = now; meta.doneToday = 0; }
+  meta.doneToday++;
+  if (meta.last === now) return;
+  meta.streak = (meta.last === now - 1) ? meta.streak + 1 : 1;
+  meta.last = now;
+}
+const liveStreak = () => { const now = dayNum(); return (meta.last === now || meta.last === now - 1) ? meta.streak : 0; };
+
+/* ======================= УТИЛИТЫ ======================= */
+let S = { screen: "home" };
+let resetArmed = false;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const plural = (n, one, few, many) => { const m10 = n % 10, m100 = n % 100; return (m10 === 1 && m100 !== 11) ? one : (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) ? few : many; };
+const daysWord = n => n + " " + plural(n, "день", "дня", "дней");
+const cardsWord = n => n + " " + plural(n, "карточка", "карточки", "карточек");
+
+function topicNum(sid, mi, ti) {
+  const c = COURSES[sid], m = c.modules[mi];
+  if (sid === "dl") return "W" + (m.weekStart + ti);
+  if (c.numbered) return (mi + 1) + "." + (ti + 1);
+  return "·";
+}
+function locate(sid, tid) {
+  const c = COURSES[sid];
+  for (let mi = 0; mi < c.modules.length; mi++) {
+    const ti = c.modules[mi].topics.findIndex(t => t.id === tid);
+    if (ti >= 0) return { mi, ti, num: topicNum(sid, mi, ti), mod: c.modules[mi] };
+  }
+  return null;
+}
+
+const ICON = {
+  back: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  chev: '<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  flame: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 4 5 6 5 11a5 5 0 0 1-10 0c0-2.5 1.2-4 2.5-5.2.3 1.6 1 2.7 2 3.2C11 8 11 5 12 2z"/></svg>',
+  speak: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4zM16 8.5a5 5 0 0 1 0 7l-1.2-1.2a3.3 3.3 0 0 0 0-4.6zM18.5 6a8.5 8.5 0 0 1 0 12l-1.2-1.2a6.8 6.8 0 0 0 0-9.6z"/></svg>'
+};
+
+function speak(text) {
+  try {
+    if (!("speechSynthesis" in window)) return;
+    const u = new SpeechSynthesisUtterance(text.replace(/[…—]/g, " "));
+    u.lang = "es-ES"; u.rate = 0.9;
+    const v = speechSynthesis.getVoices().find(v => v.lang && v.lang.toLowerCase().startsWith("es"));
+    if (v) u.voice = v;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
+/* ======================= ПОВТОРЕНИЕ ======================= */
+function buildQueue(scope) {
+  const now = dayNum(), due = [], fresh = [];
+  (scope.sid ? [scope.sid] : ORDER).forEach(sid => allTopics(sid).forEach(t => {
+    if (scope.tid && t.id !== scope.tid) return;
+    t.cards.forEach((c, i) => {
+      const k = key(sid, t.id, i), p = progress[k], item = { sid, tid: t.id, i, k, c };
+      if (!p) fresh.push(item); else if (p.d <= now) due.push(item);
+    });
+  }));
+  shuffle(due);
+  return due.concat(scope.tid ? fresh.slice(0, NEW_PER_SESSION) : []);
+}
+function startReview(scope, back) {
+  S = { screen: "review", scope, queue: buildQueue(scope), idx: 0, flipped: false, stats: [0, 0, 0], back };
+  render(); window.scrollTo(0, 0);
+}
+function grade(g) {
+  const card = S.queue[S.idx]; if (!card) return;
+  const now = dayNum(), p = progress[card.k] || { b: 0, d: now };
+  if (g === 0) { p.b = 0; p.d = now; S.queue.push(card); }
+  else if (g === 1) { p.b = Math.max(1, p.b); p.d = now + 1; }
+  else { p.b = Math.min(p.b + 1, MAX_B); p.d = now + INTERVALS[p.b]; }
+  progress[card.k] = p; S.stats[g]++; bumpStreak(); saveAll();
+  S.idx++; S.flipped = false; render();
+}
+function nextLabel(card, g) {
+  if (g === 0) return "снова";
+  if (g === 1) return "завтра";
+  const p = progress[card.k] || { b: 0 }, d = INTERVALS[Math.min(p.b + 1, MAX_B)];
+  return d === 1 ? "завтра" : "через " + daysWord(d);
+}
+
+/* ======================= КВИЗЫ И ТЕСТЫ ======================= */
+function topicQuiz(sid, tid) {
+  const t = findTopic(sid, tid);
+  return { screen: "quiz", title: t.title, key: sid + "/" + tid, qs: t.quiz.map(q => ({ ...q })), qi: 0, picked: null, score: 0, back: { screen: "lesson", sid, tid } };
+}
+function examQuiz(sid, mi) {
+  const c = COURSES[sid], m = c.modules[mi];
+  const topics = m.exam.cumulative ? allTopics(sid) : m.topics;
+  const pool = topics.flatMap(t => t.quiz && t.quiz.length ? t.quiz.map(q => ({ ...q, from: t.title })) : wordQuestions(t, topics));
+  return { screen: "quiz", title: m.exam.name + " · " + m.title, key: sid + "/exam/" + m.id, qs: shuffle(pool).slice(0, m.exam.n), qi: 0, picked: null, score: 0, back: { screen: "home" }, exam: true };
+}
+
+/* вопросы «что значит слово» для колод без квиза */
+function wordQuestions(t, topics) {
+  const others = topics.filter(x => !x.lesson).flatMap(x => x.cards.map(c => c[1]));
+  return t.cards.map(c => {
+    const wrong = shuffle(others.filter(r => r !== c[1])).filter((r, i, a) => a.indexOf(r) === i).slice(0, 2);
+    const o = shuffle([c[1], ...wrong]);
+    return { q: "«" + c[0] + "» — это…", o, a: o.indexOf(c[1]), why: c[2] + " — " + c[3], from: t.title };
+  });
+}
+
+/* ======================= ЭКРАНЫ ======================= */
+const nav = (title, back) => `<div class="nav"><button class="back" data-act="back" aria-label="Назад">${ICON.back}</button><span class="nav-title">${esc(title)}</span></div>`;
+
+function viewHome() {
+  const tab = meta.tab, course = COURSES[tab];
+  const dues = Object.fromEntries(ORDER.map(s => [s, courseDue(s)]));
+  const total = ORDER.reduce((s, k) => s + dues[k], 0);
+  const dateStr = new Date().toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" });
+  const doneToday = meta.doneDay === dayNum() ? meta.doneToday : 0;
+
+  const modules = course.modules.map((m, mi) => {
+    const gs = groupStats(tab, m.topics);
+    const isOpen = meta.open[tab + "/" + m.id] ?? (mi === 0);
+    const rows = m.topics.map((t, ti) => {
+      const st = topicStats(tab, t);
+      let sub;
+      if (!t.lesson) sub = st.total + " " + plural(st.total, "слово", "слова", "слов") + (st.fresh ? " · новых " + st.fresh : "");
+      else {
+        const q = meta.quiz[tab + "/" + t.id];
+        sub = (meta.read[tab + "/" + t.id] ? "прочитано" : "урок") + " · " + cardsWord(st.total) + (q != null ? " · квиз " + q + "/" + t.quiz.length : "");
+      }
+      const badge = st.due ? `<span class="badge">${st.due}</span>` : (st.fresh === st.total ? `<span class="badge quiet">новое</span>` : `<span class="badge quiet">✓</span>`);
+      return `<button class="row" data-act="topic" data-tid="${t.id}">
+        <span class="row-n">${topicNum(tab, mi, ti)}</span>
+        <span class="row-main"><span class="row-title">${esc(t.title)}</span><span class="row-sub">${sub}</span>
+        <span class="bar"><i style="width:${Math.round(st.mastery * 100)}%"></i></span></span>${badge}</button>`;
+    }).join("");
+    let exam = "";
+    if (m.exam) {
+      const best = meta.quiz[tab + "/exam/" + m.id];
+      const scope = m.exam.cumulative ? "весь курс" : m.topics.length + " " + plural(m.topics.length, "тема", "темы", "тем");
+      exam = `<button class="row exam" data-act="exam" data-mi="${mi}">
+        <span class="row-n">✎</span>
+        <span class="row-main"><span class="row-title">${esc(m.exam.name)}</span><span class="row-sub">${m.exam.n} вопросов · ${scope}${best ? " · лучший " + best : ""}</span></span>
+        <span class="badge quiet">тест</span></button>`;
+    }
+    const kicker = course.deck ? "" : `<span class="label mod-kicker">${tab === "dl" ? "Часть " + (mi + 1) : "Модуль " + (mi + 1)}</span>`;
+    return `<details class="module" data-mod="${tab}/${m.id}" ${isOpen ? "open" : ""}>
+      <summary>${kicker}<span class="mod-title">${esc(m.title)}</span>
+        <span class="mod-meta">${gs.due ? `<span class="badge">${gs.due}</span>` : ""}${ICON.chev}</span>
+        <span class="bar mod-bar"><i style="width:${Math.round(gs.m / gs.total * 100)}%"></i></span></summary>
+      ${rows}${exam}</details>`;
+  }).join("");
+
+  return `<div class="wrap c-${course.color}">
+    <header class="top">
+      <div><div class="date">${esc(dateStr)}</div><h1 class="brand">Тетрадка</h1></div>
+      <div class="streak" title="Дней подряд">${ICON.flame}<span>${daysWord(liveStreak())}</span></div>
+    </header>
+    <section class="today" aria-label="Сегодня">
+      <div class="today-row"><span class="today-num mono">${total}</span>
+        <span class="today-text">${total ? plural(total, "карточка ждёт", "карточки ждут", "карточек ждут") + " повторения" : "На сегодня всё повторено. Возьми новую тему ниже."}</span></div>
+      <div class="today-split">${ORDER.map(s => `<span>${COURSES[s].tab} ${dues[s]}</span>`).join("")}<span>сегодня пройдено ${doneToday}</span></div>
+      ${total ? `<button class="btn" data-act="review-all">Повторить всё</button>` : ""}
+    </section>
+    <div class="tabs" role="tablist">
+      ${ORDER.map(s => `<button class="tab" role="tab" aria-selected="${tab === s}" data-act="tab" data-tab="${s}"><span class="dot" style="background:var(--${COURSES[s].color})"></span>${COURSES[s].tab}${dues[s] ? " · " + dues[s] : ""}</button>`).join("")}
+    </div>
+    <div class="course-head"><h2 class="course-name">${esc(course.name)}</h2>
+      ${course.deck ? `<button class="toggle" data-act="dir">${meta.dir === "es-ru" ? "ES → RU" : "RU → ES"}</button>` : ""}</div>
+    <div class="stack">${modules}</div>
+    <footer class="foot">
+      <span>Прогресс хранится только на этом устройстве.</span>
+      <button class="linkbtn ${resetArmed ? "danger" : ""}" data-act="reset">${resetArmed ? "Нажми ещё раз, чтобы стереть весь прогресс" : "Сбросить прогресс"}</button>
+    </footer>
+  </div>`;
+}
+
+function viewLesson() {
+  const { sid, tid } = S, c = COURSES[sid], t = findTopic(sid, tid), st = topicStats(sid, t), loc = locate(sid, tid);
+  const best = meta.quiz[sid + "/" + tid];
+  const n = Math.min(st.due + st.fresh, st.due + NEW_PER_SESSION);
+  const body = t.lesson.map(p => typeof p === "string" ? `<p>${p}</p>` : `<pre><code>${esc(p.code)}</code></pre>`).join("");
+  return `<div class="wrap c-${c.color}">
+    ${nav(c.name + " · " + loc.mod.title)}
+    <div><div class="label">${esc(loc.num)}</div><h2 class="h-display">${esc(t.title)}</h2></div>
+    <article class="lesson">${body}</article>
+    <div class="btn-row">
+      <button class="btn" data-act="study" ${n ? "" : "disabled"}>${n ? "Карточки · " + n : "Карточки повторены"}</button>
+      <button class="btn ghost" data-act="quiz">Квиз${best != null ? " · " + best + "/" + t.quiz.length : ""}</button>
+    </div>
+  </div>`;
+}
+
+function viewDeck() {
+  const { sid, tid } = S, t = findTopic(sid, tid), st = topicStats(sid, t);
+  const words = t.cards.map((c, i) => {
+    const p = progress[key(sid, t.id, i)], b = p ? p.b : 0;
+    return `<div class="word-row"><b>${esc(c[0])}</b><span>${esc(c[1])}</span>
+      <span class="boxes" aria-label="уровень ${b}">${[1, 2, 3, 4].map(n => `<i class="${b >= n ? "on" : ""}"></i>`).join("")}</span></div>`;
+  }).join("");
+  const n = Math.min(st.due + st.fresh, st.due + NEW_PER_SESSION);
+  return `<div class="wrap c-es">
+    ${nav("Испанский")}
+    <h2 class="h-display">${esc(t.title)}</h2>
+    <button class="btn" data-act="study" ${n ? "" : "disabled"}>${n ? "Учить · " + n : "Всё повторено, приходи позже"}</button>
+    <div class="words">${words}</div>
+  </div>`;
+}
+
+function viewReview() {
+  const q = S.queue, card = q[S.idx];
+  const scopeName = S.scope.tid ? findTopic(S.scope.sid, S.scope.tid).title : "Повторение";
+  const color = S.scope.sid ? COURSES[S.scope.sid].color : (card ? COURSES[card.sid].color : "ml");
+  if (!card) {
+    const n = S.stats[0] + S.stats[1] + S.stats[2];
+    return `<div class="wrap c-${color}">${nav(scopeName)}
+      <div class="empty">
+        ${n ? `<div class="big-score mono">${S.stats[2]}/${n}</div><h2 class="h-display">Готово</h2>
+          <p style="color:var(--muted)">Помню: ${S.stats[2]} · С трудом: ${S.stats[1]} · Не помню: ${S.stats[0]}</p>`
+          : `<h2 class="h-display">Здесь пока нечего повторять</h2><p style="color:var(--muted)">Карточки вернутся, когда подойдёт их срок.</p>`}
+        <button class="btn" data-act="back">Вернуться</button>
+      </div></div>`;
+  }
+  const p = progress[card.k], b = p ? p.b : 0, c = card.c, isEs = card.sid === "es" && c.length >= 4;
+  const topic = findTopic(card.sid, card.tid), reverse = isEs && meta.dir === "ru-es";
+  const say = `<button class="speak" data-act="speak" data-text="${esc(c[0])}">${ICON.speak}Произнести</button>`;
+  let front, back;
+  if (isEs) {
+    front = `<div class="front word">${esc(reverse ? c[1] : c[0])}</div>${reverse ? "" : say}`;
+    back = `<div class="answer"><div class="main">${esc(reverse ? c[0] : c[1])}</div>${reverse ? say : ""}
+      <div class="example"><em>${esc(c[2])}</em><br>${esc(c[3])}</div></div>`;
+  } else {
+    front = `<div class="front">${esc(c[0])}</div>`;
+    back = `<div class="answer"><div class="main">${esc(c[1])}</div></div>`;
+  }
+  const label = (card.sid === "es" ? "Español · " : COURSES[card.sid].tab + " · ") + topic.title;
+  return `<div class="wrap c-${COURSES[card.sid].color}">
+    ${nav(scopeName)}
+    <div class="progress"><div class="bar"><i style="width:${Math.round(S.idx / q.length * 100)}%"></i></div><span class="mono label">${S.idx + 1}/${q.length}</span></div>
+    <div class="card" data-act="flip" tabindex="0" role="button" aria-label="Показать ответ">
+      <div class="card-meta"><span class="label">${esc(label)}${p ? "" : " · новая"}</span>
+        <span class="boxes" aria-label="уровень ${b}">${[1, 2, 3, 4, 5, 6].map(n => `<i class="${b >= n ? "on" : ""}"></i>`).join("")}</span></div>
+      ${front}
+      ${S.flipped ? back : `<div class="hint">Вспомни ответ и нажми на карточку</div>`}
+    </div>
+    ${S.flipped ? `<div class="grades">
+      <button class="grade g0" data-act="grade" data-g="0">Не помню<small>${nextLabel(card, 0)}</small></button>
+      <button class="grade g1" data-act="grade" data-g="1">С трудом<small>${nextLabel(card, 1)}</small></button>
+      <button class="grade g2" data-act="grade" data-g="2">Помню<small>${nextLabel(card, 2)}</small></button>
+    </div>` : `<button class="btn" data-act="flip">Показать ответ</button>`}
+  </div>`;
+}
+
+function viewQuiz() {
+  const qs = S.qs, color = COURSES[S.key.split("/")[0]].color;
+  if (S.qi >= qs.length) {
+    const pct = Math.round(S.score / qs.length * 100);
+    return `<div class="wrap c-${color}">${nav(S.title)}
+      <div class="empty"><div class="big-score mono">${S.score}/${qs.length}</div>
+      <h2 class="h-display">${S.score === qs.length ? "Без ошибок" : pct >= 70 ? "Хороший результат" : "Есть что повторить"}</h2>
+      <div class="btn-row" style="width:100%">
+        <button class="btn" data-act="retry">${S.exam ? "Новый вариант" : "Ещё раз"}</button>
+        <button class="btn ghost" data-act="back">${S.exam ? "К курсу" : "К уроку"}</button></div></div></div>`;
+  }
+  const q = qs[S.qi], picked = S.picked;
+  const opts = q.o.map((o, i) => {
+    let cls = "";
+    if (picked != null) { if (i === q.a) cls = "right"; else if (i === picked) cls = "wrong"; }
+    return `<button class="opt ${cls}" data-act="pick" data-i="${i}" ${picked != null ? "disabled" : ""}><span class="k">${"АБВГ"[i]}</span><span>${esc(o)}</span></button>`;
+  }).join("");
+  return `<div class="wrap c-${color}">${nav(S.title)}
+    <div class="progress"><div class="bar"><i style="width:${Math.round(S.qi / qs.length * 100)}%"></i></div><span class="mono label">${S.qi + 1}/${qs.length}</span></div>
+    ${q.from ? `<div class="from">Тема: ${esc(q.from)}</div>` : ""}
+    <h2 class="front">${esc(q.q)}</h2>
+    <div class="options">${opts}</div>
+    ${picked != null ? `<div class="why"><b>${picked === q.a ? "Верно." : "Не совсем."}</b> ${esc(q.why)}</div>
+      <button class="btn" data-act="next-q">${S.qi + 1 < qs.length ? "Дальше" : "Результат"}</button>` : ""}
+  </div>`;
+}
+
+/* ======================= РЕНДЕР И СОБЫТИЯ ======================= */
+const app = document.getElementById("app");
+function render() {
+  const v = { home: viewHome, lesson: viewLesson, deck: viewDeck, review: viewReview, quiz: viewQuiz }[S.screen] || viewHome;
+  app.innerHTML = v();
+}
+function go(s) { S = s; resetArmed = false; render(); window.scrollTo(0, 0); }
+
+app.addEventListener("toggle", e => {
+  const d = e.target;
+  if (d.matches && d.matches("details[data-mod]")) { meta.open[d.dataset.mod] = d.open; saveAll(); }
+}, true);
+
+app.addEventListener("click", e => {
+  const el = e.target.closest("[data-act]"); if (!el || el.disabled) return;
+  const a = el.dataset.act;
+  if (a !== "reset") resetArmed = false;
+  switch (a) {
+    case "back": go(S.back || { screen: "home" }); break;
+    case "tab": meta.tab = el.dataset.tab; saveAll(); render(); break;
+    case "dir": meta.dir = meta.dir === "es-ru" ? "ru-es" : "es-ru"; saveAll(); render(); break;
+    case "topic": {
+      const sid = meta.tab, tid = el.dataset.tid;
+      if (!findTopic(sid, tid).lesson) go({ screen: "deck", sid, tid, back: { screen: "home" } });
+      else { meta.read[sid + "/" + tid] = true; saveAll(); go({ screen: "lesson", sid, tid, back: { screen: "home" } }); }
+      break; }
+    case "exam": go(examQuiz(meta.tab, +el.dataset.mi)); break;
+    case "review-all": startReview({}, { screen: "home" }); break;
+    case "study": startReview({ sid: S.sid, tid: S.tid }, { ...S }); break;
+    case "quiz": go(topicQuiz(S.sid, S.tid)); break;
+    case "retry": {
+      const [sid, part, mid] = S.key.split("/");
+      if (part === "exam") go(examQuiz(sid, COURSES[sid].modules.findIndex(m => m.id === mid)));
+      else go(topicQuiz(sid, part));
+      break; }
+    case "flip": if (S.screen === "review" && !S.flipped) { S.flipped = true; render(); } break;
+    case "speak": speak(el.dataset.text); break;
+    case "grade": grade(+el.dataset.g); break;
+    case "pick":
+      if (S.picked != null) break;
+      S.picked = +el.dataset.i;
+      if (S.picked === S.qs[S.qi].a) S.score++;
+      render(); break;
+    case "next-q":
+      S.qi++; S.picked = null;
+      if (S.qi >= S.qs.length) {
+        if (S.exam) {
+          const prev = meta.quiz[S.key], pct = Math.round(S.score / S.qs.length * 100);
+          if (!prev || parseInt(prev) < pct) meta.quiz[S.key] = pct + "%";
+        } else meta.quiz[S.key] = Math.max(meta.quiz[S.key] || 0, S.score);
+        saveAll();
+      }
+      render(); window.scrollTo(0, 0); break;
+    case "reset":
+      if (!resetArmed) { resetArmed = true; render(); }
+      else { progress = {}; Object.assign(meta, { streak: 0, last: null, read: {}, quiz: {}, doneToday: 0, doneDay: null }); resetArmed = false; saveAll(); render(); }
+      break;
+  }
+});
+
+document.addEventListener("keydown", e => {
+  if (S.screen !== "review" || !S.queue[S.idx]) return;
+  if (!S.flipped && (e.key === " " || e.key === "Enter")) { e.preventDefault(); S.flipped = true; render(); }
+  else if (S.flipped && ["1", "2", "3"].includes(e.key)) grade(+e.key - 1);
+});
+
+/* офлайн-режим, когда приложение установлено как PWA */
+try {
+  if ("serviceWorker" in navigator && location.protocol === "https:" && !/claude\.ai|claudeusercontent/.test(location.hostname)) {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
+} catch (e) {}
+
+render();
+</script>
+</body>
+</html>
