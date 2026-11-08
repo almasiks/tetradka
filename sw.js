@@ -1,5 +1,5 @@
 // Тетрадка: офлайн-кэш. Меняй VERSION, когда обновляешь файлы.
-const VERSION = 'tetradka-v4';
+const VERSION = 'tetradka-v5';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
